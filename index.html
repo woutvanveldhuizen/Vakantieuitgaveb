@@ -1,0 +1,3963 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Uitgaven">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="icon" href="icons/icon-192.png">
+  <title>Vakantie-uitgaven</title>
+  <style>
+:root{
+color-scheme:dark;
+--bg:#000;
+--card:#1c1c1e;
+--cell:#2c2c2e;
+--cell2:#242426;
+--line:#38383a;
+--text:#f2f2f7;
+--muted:#8e8e93;
+--muted2:#636366;
+--accent:#0a84ff;
+--good:#30d158;
+--bad:#ff453a;
+--orange:#ff9f0a;
+}
+*{box-sizing:border-box}
+html,body{
+margin:0;
+min-height:100%;
+background:var(--bg);
+color:var(--text);
+font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",Roboto,Arial,sans-serif;
+overflow-x:hidden;
+scrollbar-width:none;
+-ms-overflow-style:none;
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+*::-webkit-scrollbar{
+display:none;
+width:0;
+height:0;
+}
+body{
+padding:18px 13px 34px;
+-webkit-font-smoothing:antialiased;
+}
+.wrap{
+max-width:760px;
+margin:auto;
+padding-top:12px;
+transition:opacity .28s ease;
+}
+body.loading .wrap{opacity:0}
+h2{
+margin:0 0 12px;
+font-size:28px;
+line-height:1.05;
+letter-spacing:-.7px;
+}
+.hidden{display:none!important}
+.card{
+background:var(--card);
+border:1px solid var(--line);
+border-radius:30px;
+padding:16px;
+margin:12px 0;
+overflow:hidden;
+}
+.hero{
+display:flex;
+flex-direction:column;
+gap:14px;
+}
+.hero-top{
+display:grid;
+grid-template-columns:minmax(0,1fr) auto;
+gap:12px;
+align-items:start;
+}
+.total-label{
+color:var(--muted);
+font-size:16px;
+margin-bottom:2px;
+}
+.total{
+font-size:clamp(50px,13vw,78px);
+font-weight:850;
+letter-spacing:-3px;
+line-height:.95;
+margin:0 0 4px;
+}
+.received-mini{
+color:var(--good);
+font-size:15px;
+font-weight:750;
+margin-top:6px;
+letter-spacing:-.2px;
+}
+.rate-badge{
+justify-self:end;
+text-align:right;
+color:var(--muted);
+font-size:11px;
+line-height:1.1;
+padding-top:4px;
+min-width:72px;
+}
+.rate-badge b{
+display:block;
+color:var(--text);
+font-size:15px;
+margin-top:3px;
+font-variant-numeric:tabular-nums;
+}
+.rate-badge.ok b{color:var(--good)}
+.rate-badge.err b{color:var(--orange)}
+.rate-badge.loading b{color:var(--muted)}
+.entry{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:9px;
+margin-top:10px;
+}
+.entry .full,
+.entry .actions,
+.currency-row,
+.amount-row,
+.type-switch{
+grid-column:1/-1;
+}
+.entry .actions,
+.currency-row,
+.export-wrap{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:9px;
+}
+.tools{
+display:grid;
+grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+gap:9px;
+margin-bottom:12px;
+}
+.tools select{
+width:100%;
+min-width:0;
+}
+select,input,button,.import-label{
+min-height:48px;
+border-radius:16px;
+border:1px solid var(--line);
+background:var(--cell);
+color:var(--text);
+padding:11px 13px;
+font:inherit;
+outline:none;
+}
+input:focus,
+select:focus{
+border-color:rgba(10,132,255,.75);
+box-shadow:0 0 0 3px rgba(10,132,255,.18);
+}
+input::placeholder{color:var(--muted2)}
+button,.import-label{
+font-weight:850;
+cursor:pointer;
+-webkit-tap-highlight-color:transparent;
+}
+.type-switch{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:6px;
+background:#111113;
+border:1px solid var(--line);
+border-radius:16px;
+padding:4px;
+}
+.type-switch button{
+min-height:40px;
+border:0;
+border-radius:12px;
+background:transparent;
+color:var(--muted);
+padding:8px 10px;
+}
+.type-switch button.active{
+background:var(--cell);
+color:var(--text);
+}
+.type-switch button[data-type="income"].active{
+color:var(--good);
+}
+.amount-row{
+display:grid;
+grid-template-columns:1fr;
+}
+.confirm{
+color:white;
+background:rgba(48,209,88,.18);
+border-color:rgba(48,209,88,.38);
+font-size:24px;
+}
+.cancel{
+color:white;
+background:rgba(255,69,58,.16);
+border-color:rgba(255,69,58,.36);
+font-size:24px;
+}
+.plus{
+width:40px;
+height:40px;
+min-width:40px;
+min-height:40px;
+max-width:40px;
+max-height:40px;
+border-radius:50%;
+color:transparent;
+font-size:0;
+line-height:0;
+display:flex;
+align-items:center;
+justify-content:center;
+position:relative;
+padding:0;
+margin-top:10px;
+background:var(--cell);
+border:1px solid var(--line);
+flex:0 0 40px;
+}
+.plus::before,
+.plus::after{
+content:"";
+position:absolute;
+left:50%;
+top:50%;
+background:var(--accent);
+border-radius:2px;
+transform:translate(-50%,-50%);
+pointer-events:none;
+}
+.plus::before{
+width:20px;
+height:3px;
+}
+.plus::after{
+width:3px;
+height:20px;
+}
+.ios-list{
+display:flex;
+flex-direction:column;
+gap:6px;
+}
+.list-grid{
+display:grid;
+grid-template-columns:92px minmax(128px,1fr) 118px;
+gap:8px;
+align-items:center;
+}
+.list-head{
+color:var(--muted);
+font-size:12px;
+padding:0 10px 4px;
+}
+.list-head span:nth-child(3){text-align:right}
+.empty{
+color:var(--muted);
+background:var(--cell);
+border:1px solid var(--line);
+border-radius:16px;
+padding:13px;
+}
+.expense-cell{
+position:relative;
+overflow:hidden;
+border-radius:16px;
+background:var(--cell);
+border:1px solid rgba(255,255,255,.08);
+user-select:none;
+touch-action:pan-y;
+}
+.expense-line{
+position:relative;
+z-index:2;
+min-height:52px;
+padding:9px 10px;
+background:var(--cell);
+transition:transform .18s cubic-bezier(.2,.8,.2,1),background .12s ease;
+will-change:transform;
+}
+.expense-date{
+color:var(--muted);
+font-size:13px;
+white-space:nowrap;
+font-variant-numeric:tabular-nums;
+}
+.expense-main{min-width:0}
+.expense-cat{
+font-size:15px;
+white-space:nowrap;
+overflow:visible;
+line-height:1.12;
+}
+.expense-note{
+display:block;
+margin-top:3px;
+color:var(--muted);
+font-size:11px;
+line-height:1.15;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+max-width:100%;
+}
+.expense-amount-wrap{
+text-align:right;
+white-space:nowrap;
+min-width:0;
+}
+.expense-amount{
+display:block;
+font-size:15px;
+font-variant-numeric:tabular-nums;
+line-height:1.15;
+}
+.original{
+display:block;
+margin-top:3px;
+color:var(--muted);
+font-size:11px;
+line-height:1.1;
+text-align:right;
+}
+.income{color:var(--good)}
+.outgoing{color:var(--text)}
+.swipe-action{
+position:absolute;
+top:0;
+bottom:0;
+width:82px;
+z-index:1;
+display:flex;
+align-items:center;
+justify-content:center;
+border:0;
+border-radius:0;
+color:white;
+padding:0;
+}
+.swipe-edit{left:0;background:var(--accent)}
+.swipe-delete{right:0;background:var(--bad)}
+.swipe-action svg{
+width:24px;
+height:24px;
+fill:none;
+stroke:white;
+stroke-width:2.2;
+stroke-linecap:round;
+stroke-linejoin:round;
+}
+.expense-cell.edit-open .expense-line{transform:translateX(82px)}
+.expense-cell.delete-open .expense-line{transform:translateX(-82px)}
+.expense-cell.dragging .expense-line{transition:none}
+.chart-summary{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:9px;
+margin-bottom:12px;
+}
+.chart-pill{
+background:var(--cell);
+border:1px solid rgba(255,255,255,.08);
+border-radius:18px;
+padding:11px 13px;
+color:var(--muted);
+font-size:13px;
+}
+.chart-pill b{
+display:block;
+color:var(--text);
+font-size:20px;
+margin-top:5px;
+letter-spacing:-.4px;
+}
+.bars{
+display:flex;
+flex-direction:column;
+gap:12px;
+margin-top:8px;
+}
+.barTop{
+display:flex;
+justify-content:space-between;
+gap:8px;
+font-size:15px;
+color:var(--muted);
+margin-bottom:6px;
+}
+.barTop strong{
+color:var(--text);
+font-weight:750;
+}
+.barTrack{
+height:20px;
+background:#111113;
+border:1px solid var(--line);
+border-radius:999px;
+overflow:hidden;
+}
+.barFill{
+height:100%;
+width:0;
+border-radius:999px;
+min-width:0;
+transition:width .25s ease;
+}
+.barFill.outgoing{background:linear-gradient(90deg,#5e5ce6,var(--accent))}
+.barFill.income{background:linear-gradient(90deg,#248a3d,var(--good))}
+.manage-categories{
+display:grid;
+grid-template-columns:minmax(0,1fr) auto 54px;
+gap:9px;
+margin-top:10px;
+}
+.category-list{
+display:flex;
+flex-wrap:wrap;
+gap:6px;
+margin-top:10px;
+}
+.chip{
+background:var(--cell);
+border:1px solid var(--line);
+border-radius:999px;
+padding:7px 10px;
+color:var(--muted);
+font-size:13px;
+}
+.chip.can-delete{
+color:white;
+background:rgba(255,69,58,.25);
+border-color:rgba(255,69,58,.45);
+}
+.chip.locked{
+opacity:.38;
+color:var(--muted);
+}
+.category-edit-btn{
+width:54px;
+padding:0;
+color:var(--bad);
+display:flex;
+align-items:center;
+justify-content:center;
+}
+.category-edit-btn.active{
+background:rgba(255,69,58,.20);
+border-color:rgba(255,69,58,.45);
+}
+.category-edit-btn svg{
+width:22px;
+height:22px;
+fill:none;
+stroke:currentColor;
+stroke-width:2.2;
+stroke-linecap:round;
+stroke-linejoin:round;
+}
+.export-wrap{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:9px;
+margin-top:12px;
+}
+.import-label{
+display:flex;
+align-items:center;
+justify-content:center;
+text-align:center;
+color:var(--accent);
+}
+#importCsvInput{display:none}
+.import-status{
+margin-top:10px;
+color:var(--muted);
+font-size:13px;
+line-height:1.35;
+}
+.splash{
+position:fixed;
+inset:0;
+z-index:99999;
+background:#000;
+display:flex;
+align-items:center;
+justify-content:center;
+flex-direction:column;
+padding:32px;
+opacity:1;
+visibility:visible;
+transition:opacity .22s ease,visibility .22s ease;
+}
+.splash img{
+width:132px;
+height:132px;
+border-radius:30px;
+margin-bottom:18px;
+box-shadow:0 18px 50px rgba(0,0,0,.55);
+opacity:0;
+transform:scale(.94);
+}
+.splash h1{
+font-size:26px;
+line-height:1.05;
+letter-spacing:-.6px;
+margin:0;
+opacity:0;
+transform:translateY(7px);
+}
+.splash.play img{animation:splashLogoIn .50s ease forwards}
+.splash.play h1{animation:splashTextIn .45s ease .50s forwards}
+.splash.fade-out img,
+.splash.fade-out h1{animation:splashFadeOut .20s ease forwards}
+.splash.hide{opacity:0;visibility:hidden;pointer-events:none}
+@keyframes splashLogoIn{to{opacity:1;transform:scale(1)}}
+@keyframes splashTextIn{to{opacity:1;transform:translateY(0)}}
+@keyframes splashFadeOut{to{opacity:0;transform:translateY(-4px) scale(.985)}}
+.update-bar{
+display:flex;
+position:fixed;
+left:12px;
+right:12px;
+top:12px;
+z-index:99998;
+background:#2c2c2e;
+border:1px solid #48484a;
+border-radius:16px;
+padding:10px 12px;
+align-items:center;
+justify-content:space-between;
+gap:10px;
+}
+.update-bar span{
+font-size:14px;
+font-weight:700;
+}
+.update-bar button{
+min-height:34px;
+border:0;
+border-radius:12px;
+background:#c91f2f;
+color:white;
+padding:8px 12px;
+font-weight:800;
+}
+@media(max-width:430px){
+.list-grid{
+grid-template-columns:88px minmax(124px,1fr) 104px;
+gap:6px;
+}
+.expense-date{font-size:12px}
+.expense-cat{font-size:14px}
+.expense-amount{font-size:14px}
+.swipe-action{width:76px}
+.expense-cell.edit-open .expense-line{transform:translateX(76px)}
+.expense-cell.delete-open .expense-line{transform:translateX(-76px)}
+}
+@media(max-width:390px){
+body{padding-left:10px;padding-right:10px}
+.card{padding:14px}
+.list-grid{
+grid-template-columns:82px minmax(112px,1fr) 98px;
+gap:5px;
+}
+.expense-line{
+padding-left:8px;
+padding-right:8px;
+}
+.list-head{
+padding-left:8px;
+padding-right:8px;
+}
+.expense-date{font-size:11px}
+.expense-cat{font-size:13px}
+.expense-amount{font-size:13px}
+.original,.expense-note{font-size:10.5px}
+.manage-categories{grid-template-columns:minmax(0,1fr) auto 50px}
+.category-edit-btn{width:50px}
+}
+
+.rate-reset{display:none;margin-top:5px;min-height:24px;border-radius:10px;padding:2px 8px;font-size:12px;color:var(--muted);background:transparent}
+.rate-badge:active .rate-reset,.rate-badge:hover .rate-reset{display:inline-flex}
+.undo-toast{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom) + 14px);z-index:99997;background:#2c2c2e;border:1px solid #48484a;border-radius:18px;padding:11px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 18px 50px rgba(0,0,0,.45)}
+.undo-toast span{font-size:14px;font-weight:700;color:var(--text)}
+.undo-toast button{min-height:34px;border:0;border-radius:12px;background:var(--accent);color:white;padding:8px 12px;font-size:14px}
+
+
+/* Correcties v2.1.2 */
+.total{font-size:clamp(42px,10.5vw,62px)!important}
+#entryTitle{display:none!important}
+.rate-badge{background:transparent!important;border:0!important;padding-top:4px!important}
+.rate-badge b{color:var(--orange)!important}
+.rate-badge.ok b,.rate-badge.err b,.rate-badge.loading b{color:var(--orange)!important}
+.barTrack{position:relative!important;height:24px!important;background:#111113!important;border:1px solid var(--line)!important;border-radius:999px!important;overflow:hidden!important}
+.barTrack::before{content:""!important;position:absolute!important;left:50%!important;top:0!important;bottom:0!important;width:1px!important;background:rgba(255,255,255,.30)!important;z-index:2!important}
+.barFill{position:absolute!important;top:0!important;height:100%!important;border-radius:999px!important;min-width:0!important;transition:width .25s ease!important}
+.barFill.outgoing{right:50%!important;left:auto!important;background:linear-gradient(90deg,#5e5ce6,var(--accent))!important}
+.barFill.income{left:50%!important;right:auto!important;background:linear-gradient(90deg,#248a3d,var(--good))!important}
+
+
+/* Koersfix stabiel */
+.rate-badge b,.rate-badge.ok b,.rate-badge.err b,.rate-badge.loading b{color:var(--orange)!important}
+
+/* v2.4.0 accordions */
+.accordion-card{
+padding:0;
+overflow:hidden;
+}
+.accordion-toggle{
+width:100%;
+min-height:64px;
+border:0;
+border-radius:0;
+background:transparent;
+color:var(--text);
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:14px;
+padding:16px;
+font:inherit;
+font-weight:850;
+font-size:24px;
+line-height:1.05;
+letter-spacing:-.5px;
+text-align:left;
+cursor:pointer;
+}
+.accordion-toggle:active{
+background:rgba(255,255,255,.04);
+}
+.accordion-title{
+display:flex;
+flex-direction:column;
+gap:3px;
+min-width:0;
+}
+.accordion-title strong{
+font-size:24px;
+line-height:1.05;
+letter-spacing:-.5px;
+}
+.accordion-title span{
+color:var(--muted);
+font-size:13px;
+line-height:1.2;
+font-weight:600;
+letter-spacing:0;
+}
+.accordion-chevron{
+width:26px;
+height:26px;
+border-radius:50%;
+background:var(--cell);
+display:flex;
+align-items:center;
+justify-content:center;
+flex:0 0 26px;
+transition:transform .18s ease, background .18s ease;
+}
+.accordion-chevron::before{
+content:"";
+width:8px;
+height:8px;
+border-right:2px solid var(--muted);
+border-bottom:2px solid var(--muted);
+transform:rotate(45deg) translate(-1px,-1px);
+}
+.accordion-card.closed .accordion-chevron{
+transform:rotate(-90deg);
+}
+.accordion-body{
+padding:0 16px 16px;
+overflow:hidden;
+transition:max-height .24s ease, opacity .18s ease, padding-bottom .24s ease;
+max-height:1600px;
+opacity:1;
+}
+.accordion-card.closed .accordion-body{
+max-height:0;
+opacity:0;
+padding-bottom:0;
+pointer-events:none;
+}
+@media(max-width:430px){
+.accordion-toggle{
+min-height:60px;
+padding:15px 14px;
+}
+.accordion-body{
+padding-left:14px;
+padding-right:14px;
+}
+.accordion-title strong{
+font-size:22px;
+}
+}
+
+/* v2.4.0 data-info */
+#appDataInfo{
+margin-top:12px;
+}
+
+
+/* v2.4.0 voorkeuren */
+body.light-theme{
+--bg:#f2f2f7;
+--card:#ffffff;
+--cell:#f2f2f7;
+--cell2:#f8f8fb;
+--line:#d1d1d6;
+--text:#1c1c1e;
+--muted:#6e6e73;
+--muted2:#8e8e93;
+}
+
+body.light-theme .barTrack,
+body.light-theme .type-switch,
+body.light-theme .range-switch,
+body.light-theme .pln-chart-wrap{
+background:#f2f2f7;
+}
+
+body.light-theme .splash{
+background:#f2f2f7;
+color:#1c1c1e;
+}
+
+.preferences-grid{
+display:grid;
+grid-template-columns:1fr;
+gap:10px;
+}
+
+.preference-row{
+display:grid;
+grid-template-columns:1fr minmax(132px,auto);
+align-items:center;
+gap:12px;
+background:rgba(255,255,255,.04);
+border:1px solid rgba(255,255,255,.06);
+border-radius:16px;
+padding:10px 12px;
+}
+
+body.light-theme .preference-row{
+background:#f8f8fb;
+border-color:#e5e5ea;
+}
+
+.preference-row span{
+color:var(--text);
+font-size:15px;
+font-weight:750;
+letter-spacing:-.15px;
+}
+
+.preference-row select{
+min-height:40px;
+border-radius:13px;
+padding:8px 10px;
+}
+
+@media(max-width:390px){
+.preference-row{
+grid-template-columns:1fr;
+align-items:start;
+}
+}
+
+
+/* v2.4.0 data-status */
+.data-status{
+display:flex;
+flex-direction:column;
+gap:8px;
+margin-top:12px;
+}
+.data-status-row{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:12px;
+background:rgba(255,255,255,.04);
+border:1px solid rgba(255,255,255,.06);
+border-radius:14px;
+padding:10px 12px;
+font-size:13px;
+line-height:1.25;
+}
+body.light-theme .data-status-row{
+background:#f8f8fb;
+border-color:#e5e5ea;
+}
+.data-status-row span:first-child{
+color:var(--muted);
+font-weight:650;
+}
+.data-status-row span:last-child{
+color:var(--text);
+font-weight:800;
+text-align:right;
+font-variant-numeric:tabular-nums;
+}
+.data-status-note{
+color:var(--muted);
+font-size:12px;
+line-height:1.35;
+padding:3px 2px 0;
+}
+
+
+/* v2.4.0 Apple-achtige instellingen */
+.settings-stack{
+gap:12px;
+}
+
+.sub-accordion{
+background:var(--cell2);
+border:1px solid rgba(255,255,255,.07);
+border-radius:22px;
+overflow:hidden;
+box-shadow:0 1px 0 rgba(255,255,255,.04) inset;
+}
+
+.sub-accordion .accordion-toggle{
+min-height:68px;
+padding:12px 14px;
+display:grid;
+grid-template-columns:42px minmax(0,1fr) 26px;
+align-items:center;
+gap:12px;
+}
+
+.sub-accordion .accordion-toggle:active{
+background:rgba(255,255,255,.045);
+}
+
+.ios-setting-icon{
+width:36px;
+height:36px;
+border-radius:10px;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:21px;
+font-weight:800;
+color:white;
+box-shadow:0 1px 0 rgba(255,255,255,.25) inset,0 8px 18px rgba(0,0,0,.18);
+}
+
+.ios-setting-icon.pref{
+background:linear-gradient(180deg,#3a8cff,#006fe6);
+}
+
+.ios-setting-icon.cat{
+background:linear-gradient(180deg,#ffb340,#a86b00);
+}
+
+.ios-setting-icon.manage{
+background:linear-gradient(180deg,#34c759,#168a34);
+}
+
+.sub-accordion .accordion-title{
+gap:3px;
+}
+
+.sub-accordion .accordion-title strong{
+font-size:18px;
+line-height:1.1;
+font-weight:500;
+letter-spacing:-.25px;
+}
+
+.sub-accordion .accordion-title span{
+font-size:12.5px;
+line-height:1.2;
+font-weight:500;
+color:var(--muted);
+}
+
+.sub-accordion .accordion-chevron{
+width:22px;
+height:22px;
+background:transparent;
+border-radius:0;
+justify-self:end;
+}
+
+.sub-accordion .accordion-chevron::before{
+width:9px;
+height:9px;
+border-right:3px solid var(--muted2);
+border-bottom:3px solid var(--muted2);
+transform:rotate(-45deg);
+}
+
+.sub-accordion.closed .accordion-chevron{
+transform:none;
+}
+
+.sub-accordion:not(.closed) .accordion-chevron{
+transform:rotate(90deg);
+}
+
+.sub-accordion .accordion-body{
+padding:0 14px 14px 68px;
+}
+
+.sub-accordion:not(.closed) .accordion-body{
+border-top:1px solid rgba(255,255,255,.08);
+}
+
+body.light-theme .sub-accordion{
+background:#fff;
+border-color:#e5e5ea;
+box-shadow:none;
+}
+
+body.light-theme .sub-accordion:not(.closed) .accordion-body{
+border-top-color:#e5e5ea;
+}
+
+body.light-theme .sub-accordion .accordion-toggle:active{
+background:#f2f2f7;
+}
+
+body.light-theme .ios-setting-icon{
+box-shadow:0 1px 0 rgba(255,255,255,.45) inset,0 4px 10px rgba(0,0,0,.12);
+}
+
+@media(max-width:430px){
+.sub-accordion .accordion-toggle{
+min-height:64px;
+grid-template-columns:40px minmax(0,1fr) 24px;
+gap:11px;
+padding:11px 13px;
+}
+.ios-setting-icon{
+width:34px;
+height:34px;
+border-radius:9px;
+font-size:20px;
+}
+.sub-accordion .accordion-title strong{
+font-size:17px;
+}
+.sub-accordion .accordion-body{
+padding-left:14px;
+}
+}
+
+
+/* v2.4.0 iOS grouped settings */
+.settings-stack{
+display:block;
+border-radius:22px;
+overflow:hidden;
+background:var(--cell2);
+border:1px solid rgba(255,255,255,.07);
+box-shadow:0 1px 0 rgba(255,255,255,.04) inset;
+}
+
+.settings-stack .sub-accordion{
+background:transparent;
+border:0;
+border-radius:0;
+box-shadow:none;
+overflow:hidden;
+margin:0;
+}
+
+.settings-stack .sub-accordion + .sub-accordion{
+border-top:1px solid rgba(255,255,255,.08);
+}
+
+.settings-stack .sub-accordion .accordion-toggle{
+min-height:62px;
+padding:11px 14px;
+display:grid;
+grid-template-columns:minmax(0,1fr) 24px;
+align-items:center;
+gap:12px;
+border-radius:0;
+}
+
+.settings-stack .sub-accordion .accordion-toggle:active{
+background:rgba(255,255,255,.045);
+}
+
+.settings-stack .ios-setting-icon{
+width:32px;
+height:32px;
+border-radius:8px;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:18px;
+font-weight:800;
+color:white;
+box-shadow:0 1px 0 rgba(255,255,255,.25) inset,0 6px 14px rgba(0,0,0,.16);
+}
+
+.settings-stack .accordion-title{
+display:flex;
+flex-direction:column;
+gap:2px;
+min-width:0;
+}
+
+.settings-stack .accordion-title strong{
+font-size:17px;
+line-height:1.12;
+font-weight:500;
+letter-spacing:-.25px;
+}
+
+.settings-stack .accordion-title span{
+font-size:12px;
+line-height:1.2;
+font-weight:500;
+color:var(--muted);
+}
+
+.settings-stack .accordion-chevron{
+width:22px;
+height:22px;
+background:transparent;
+border-radius:0;
+justify-self:end;
+transition:transform .18s ease;
+}
+
+.settings-stack .accordion-chevron::before{
+content:"";
+display:block;
+width:8px;
+height:8px;
+border-right:3px solid var(--muted2);
+border-bottom:3px solid var(--muted2);
+transform:rotate(-45deg);
+}
+
+.settings-stack .sub-accordion.closed .accordion-chevron{
+transform:none;
+}
+
+.settings-stack .sub-accordion:not(.closed) .accordion-chevron{
+transform:rotate(90deg);
+}
+
+.settings-stack .sub-accordion .accordion-body{
+padding:0 14px 14px 64px;
+max-height:1600px;
+opacity:1;
+overflow:hidden;
+transition:max-height .24s ease, opacity .18s ease, padding-bottom .24s ease;
+}
+
+.settings-stack .sub-accordion.closed .accordion-body{
+max-height:0;
+opacity:0;
+padding-bottom:0;
+pointer-events:none;
+}
+
+.settings-stack .sub-accordion:not(.closed) .accordion-body{
+border-top:1px solid rgba(255,255,255,.08);
+}
+
+body.light-theme .settings-stack{
+background:#fff;
+border-color:#e5e5ea;
+box-shadow:none;
+}
+
+body.light-theme .settings-stack .sub-accordion + .sub-accordion,
+body.light-theme .settings-stack .sub-accordion:not(.closed) .accordion-body{
+border-top-color:#e5e5ea;
+}
+
+body.light-theme .settings-stack .sub-accordion .accordion-toggle:active{
+background:#f2f2f7;
+}
+
+body.light-theme .settings-stack .ios-setting-icon{
+box-shadow:0 1px 0 rgba(255,255,255,.45) inset,0 4px 10px rgba(0,0,0,.12);
+}
+
+@media(max-width:430px){
+.settings-stack{
+border-radius:20px;
+}
+
+.settings-stack .sub-accordion .accordion-toggle{
+min-height:60px;
+grid-template-columns:minmax(0,1fr) 24px;
+gap:11px;
+padding:10px 13px;
+}
+
+.settings-stack .ios-setting-icon{
+width:31px;
+height:31px;
+border-radius:8px;
+font-size:17px;
+}
+
+.settings-stack .accordion-title strong{
+font-size:16px;
+}
+
+.settings-stack .accordion-title span{
+font-size:11.5px;
+}
+
+.settings-stack .sub-accordion .accordion-body{
+padding-left:14px;
+padding-right:13px;
+}
+}
+
+
+/* v2.4.0 iOS grouped hoofdmenu */
+.wrap > .accordion-card{
+margin-top:0;
+margin-bottom:0;
+border-radius:0;
+border-bottom:0;
+background:var(--card);
+}
+
+.wrap > .accordion-card[data-accordion="expenses"]{
+margin-top:12px;
+border-top-left-radius:30px;
+border-top-right-radius:30px;
+}
+
+.wrap > .accordion-card[data-accordion="settings"]{
+border-bottom-left-radius:30px;
+border-bottom-right-radius:30px;
+border-bottom:1px solid var(--line);
+margin-bottom:12px;
+}
+
+.wrap > .accordion-card[data-accordion="analysis"],
+.wrap > .accordion-card[data-accordion="settings"]{
+border-top:0;
+}
+
+.wrap > .accordion-card[data-accordion="analysis"]::before,
+.wrap > .accordion-card[data-accordion="settings"]::before{
+content:"";
+display:block;
+height:1px;
+background:rgba(255,255,255,.08);
+margin-left:16px;
+}
+
+.wrap > .accordion-card > .accordion-toggle{
+min-height:62px;
+padding:14px 16px;
+}
+
+.wrap > .accordion-card > .accordion-toggle:active{
+background:rgba(255,255,255,.045);
+}
+
+.wrap > .accordion-card > .accordion-body{
+padding-top:0;
+}
+
+.wrap > .accordion-card:not(.closed) > .accordion-body{
+border-top:1px solid rgba(255,255,255,.08);
+}
+
+.wrap > .accordion-card[data-accordion="analysis"]:not(.closed)::before,
+.wrap > .accordion-card[data-accordion="settings"]:not(.closed)::before{
+display:none;
+}
+
+body.light-theme .wrap > .accordion-card[data-accordion="analysis"]::before,
+body.light-theme .wrap > .accordion-card[data-accordion="settings"]::before,
+body.light-theme .wrap > .accordion-card:not(.closed) > .accordion-body{
+background:#e5e5ea;
+border-top-color:#e5e5ea;
+}
+
+body.light-theme .wrap > .accordion-card > .accordion-toggle:active{
+background:#f2f2f7;
+}
+
+@media(max-width:430px){
+.wrap > .accordion-card[data-accordion="expenses"]{
+border-top-left-radius:28px;
+border-top-right-radius:28px;
+}
+.wrap > .accordion-card[data-accordion="settings"]{
+border-bottom-left-radius:28px;
+border-bottom-right-radius:28px;
+}
+.wrap > .accordion-card > .accordion-toggle{
+min-height:60px;
+padding:13px 14px;
+}
+.wrap > .accordion-card[data-accordion="analysis"]::before,
+.wrap > .accordion-card[data-accordion="settings"]::before{
+margin-left:14px;
+}
+}
+
+
+/* v2.4.0 vaste separators */
+.wrap > .accordion-card:not(.closed) > .accordion-body{
+border-top:0;
+}
+
+.wrap > .accordion-card[data-accordion="analysis"]::before,
+.wrap > .accordion-card[data-accordion="settings"]::before{
+display:block;
+}
+
+.wrap > .accordion-card[data-accordion="analysis"]:not(.closed)::before,
+.wrap > .accordion-card[data-accordion="settings"]:not(.closed)::before{
+display:block;
+}
+
+body.light-theme .wrap > .accordion-card[data-accordion="analysis"]::before,
+body.light-theme .wrap > .accordion-card[data-accordion="settings"]::before{
+background:#e5e5ea;
+}
+
+
+/* v2.4.0 vaste separators instellingen */
+.settings-stack .sub-accordion:not(.closed) .accordion-body{
+border-top:0;
+}
+
+.settings-stack .sub-accordion + .sub-accordion{
+border-top:1px solid rgba(255,255,255,.08);
+}
+
+body.light-theme .settings-stack .sub-accordion + .sub-accordion{
+border-top-color:#e5e5ea;
+}
+
+
+/* v2.4.0 beheer status separators */
+.data-status{
+gap:0;
+border:1px solid rgba(255,255,255,.08);
+border-radius:16px;
+overflow:hidden;
+background:rgba(255,255,255,.02);
+}
+.data-status-row{
+margin:0;
+border:0;
+border-radius:0;
+background:transparent;
+}
+.data-status-row + .data-status-row{
+border-top:1px solid rgba(255,255,255,.08);
+}
+.data-status-note{
+padding:10px 12px;
+border-top:1px solid rgba(255,255,255,.08);
+}
+body.light-theme .data-status{
+border-color:#e5e5ea;
+background:#fff;
+}
+body.light-theme .data-status-row + .data-status-row,
+body.light-theme .data-status-note{
+border-top-color:#e5e5ea;
+}
+
+
+/* v2.4.0 voorkeuren grouped */
+.preferences-grid{
+gap:0;
+border:1px solid rgba(255,255,255,.08);
+border-radius:16px;
+overflow:hidden;
+background:rgba(255,255,255,.02);
+}
+.preference-row{
+margin:0;
+border:0;
+border-radius:0;
+background:transparent;
+}
+.preference-row + .preference-row{
+border-top:1px solid rgba(255,255,255,.08);
+}
+body.light-theme .preferences-grid{
+border-color:#e5e5ea;
+background:#fff;
+}
+body.light-theme .preference-row + .preference-row{
+border-top-color:#e5e5ea;
+}
+
+
+/* v2.4.0 PLN grafiek herstel */
+.chart-sheet{
+box-sizing:border-box;
+overflow:hidden;
+}
+
+.pln-chart-wrap{
+height:260px;
+max-height:260px;
+min-height:260px;
+overflow:hidden;
+box-sizing:border-box;
+}
+
+#plnChartCanvas{
+display:block;
+width:100%;
+height:100%;
+max-width:100%;
+max-height:100%;
+}
+
+#plnChartModal .rate-badge,
+#plnChartModal .rate-badge b{
+font-size:inherit;
+}
+
+.chart-foot,
+.chart-foot span{
+font-size:12px;
+line-height:1.25;
+}
+
+@media(max-width:430px){
+.pln-chart-wrap{
+height:240px;
+max-height:240px;
+min-height:240px;
+}
+}
+
+/* v2.4.0 final clean top layout */
+.summary-bar{
+margin:12px 0;
+}
+
+.summary-row{
+display:block;
+margin:8px 2px 10px;
+}
+
+.summary-total,
+.summary-received{
+display:block;
+font-size:20px;
+line-height:1.12;
+font-weight:800;
+letter-spacing:-.35px;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+font-variant-numeric:tabular-nums;
+text-align:left;
+}
+
+.summary-total{
+color:var(--text);
+margin-bottom:6px;
+}
+
+.summary-received{
+color:var(--good);
+}
+
+.summary-action-row{
+display:flex;
+align-items:flex-start;
+gap:12px;
+height:80px;
+width:100%;
+}
+
+.summary-plus{
+width:80px;
+height:80px;
+min-width:80px;
+min-height:80px;
+max-width:80px;
+max-height:80px;
+flex:0 0 80px;
+border-radius:50%;
+border:1px solid var(--line);
+background:var(--cell);
+color:#0a84ff;
+font-size:56px;
+line-height:1;
+font-weight:650;
+display:flex;
+align-items:center;
+justify-content:center;
+padding:0 0 5px;
+margin:0;
+box-sizing:border-box;
+box-shadow:0 2px 8px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.08);
+}
+
+.summary-rate{
+height:80px;
+min-height:80px;
+flex:1 1 auto;
+min-width:0;
+box-sizing:border-box;
+display:flex;
+align-items:center;
+justify-content:flex-start;
+gap:7px;
+padding:0 56px 0 20px;
+border:1px solid var(--line);
+border-radius:24px;
+background:var(--card);
+color:var(--orange);
+font-size:20px;
+font-weight:850;
+line-height:1;
+text-align:left;
+position:relative;
+overflow:hidden;
+}
+
+.summary-rate span,
+.summary-rate b{
+display:inline;
+margin:0;
+padding:0;
+color:var(--orange);
+font-size:20px;
+font-weight:850;
+line-height:1;
+white-space:nowrap;
+font-variant-numeric:tabular-nums;
+}
+
+.summary-rate b{
+cursor:pointer;
+text-decoration:none;
+}
+
+.summary-rate::after{
+content:"›";
+position:absolute;
+right:20px;
+top:50%;
+transform:translateY(-50%);
+color:var(--muted);
+font-size:30px;
+line-height:1;
+}
+
+.summary-entry-card{
+margin-top:12px;
+background:var(--card);
+border:1px solid var(--line);
+border-radius:30px;
+padding:16px;
+}
+
+.summary-entry-card:has(.entry.hidden){
+display:none;
+}
+
+.summary-entry-card #entryTitle{
+display:none;
+}
+
+.summary-entry-card .entry{
+margin-top:0;
+}
+
+@media(max-width:390px){
+.summary-action-row{
+gap:10px;
+}
+
+.summary-rate{
+padding-left:18px;
+padding-right:52px;
+}
+
+.summary-rate span,
+.summary-rate b{
+font-size:19px;
+}
+}
+
+
+/* v2.4.0 valuta-menu top cleanup */
+.summary-rate{
+justify-content:center;
+padding:0 18px;
+}
+.summary-rate::after{
+content:none;
+}
+.summary-rate b{
+cursor:default;
+}
+
+/* v2.4.0 valuta inline chart */
+.currency-panel{
+display:flex;
+flex-direction:column;
+gap:12px;
+}
+
+.currency-current{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+}
+
+.currency-current > div{
+background:rgba(255,255,255,.04);
+border:1px solid rgba(255,255,255,.06);
+border-radius:16px;
+padding:10px 12px;
+min-width:0;
+}
+
+.currency-current span{
+display:block;
+color:var(--muted);
+font-size:12px;
+font-weight:650;
+line-height:1.2;
+margin-bottom:6px;
+}
+
+.currency-current strong{
+display:block;
+color:var(--text);
+font-size:15px;
+font-weight:850;
+line-height:1.15;
+font-variant-numeric:tabular-nums;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+}
+
+.inline-chart{
+height:240px;
+min-height:240px;
+max-height:240px;
+}
+
+body.light-theme .currency-current > div{
+background:#f8f8fb;
+border-color:#e5e5ea;
+}
+
+@media(max-width:390px){
+.currency-current{
+grid-template-columns:1fr;
+}
+.inline-chart{
+height:220px;
+min-height:220px;
+max-height:220px;
+}
+}
+
+
+/* v2.4.0 koers bovenin verwijderd */
+.summary-action-row-single{
+display:flex;
+align-items:flex-start;
+height:80px;
+width:100%;
+}
+
+.summary-rate-hidden{
+position:absolute;
+width:1px;
+height:1px;
+overflow:hidden;
+clip:rect(0 0 0 0);
+clip-path:inset(50%);
+white-space:nowrap;
+border:0;
+padding:0;
+margin:-1px;
+}
+
+
+/* v2.4.0 top totals */
+.summary-row{
+display:flex !important;
+justify-content:space-between;
+align-items:flex-start;
+gap:16px;
+margin:8px 2px 10px;
+}
+.summary-total,
+.summary-received{
+display:block;
+font-size:20px;
+line-height:1.12;
+font-weight:800;
+margin:0;
+white-space:nowrap;
+font-variant-numeric:tabular-nums;
+}
+.summary-total{text-align:left;}
+.summary-received{text-align:right;margin-left:auto;}
+
+
+/* v2.4.0 plus centered in top row */
+.summary-row-with-plus{
+display:grid;
+grid-template-columns:minmax(0,1fr) 64px minmax(0,1fr);
+align-items:center;
+gap:12px;
+margin:8px 2px 14px;
+}
+
+.summary-row-with-plus .summary-total,
+.summary-row-with-plus .summary-received{
+font-size:20px;
+line-height:1.12;
+font-weight:800;
+margin:0;
+white-space:nowrap;
+font-variant-numeric:tabular-nums;
+}
+
+.summary-row-with-plus .summary-total{
+text-align:left;
+}
+
+.summary-row-with-plus .summary-received{
+text-align:right;
+}
+
+.summary-row-with-plus .summary-plus{
+width:64px;
+height:64px;
+min-width:64px;
+min-height:64px;
+max-width:64px;
+max-height:64px;
+justify-self:center;
+align-self:center;
+border-radius:50%;
+font-size:46px;
+line-height:1;
+padding:0 0 4px;
+margin:0;
+}
+
+.summary-action-row-single{
+display:none;
+}
+
+@media(max-width:390px){
+.summary-row-with-plus{
+grid-template-columns:minmax(0,1fr) 58px minmax(0,1fr);
+gap:10px;
+}
+.summary-row-with-plus .summary-plus{
+width:58px;
+height:58px;
+min-width:58px;
+min-height:58px;
+max-width:58px;
+max-height:58px;
+font-size:42px;
+}
+}
+
+
+/* v2.4.0 fixed center top row */
+.summary-row-with-plus{
+position:relative;
+display:grid;
+grid-template-columns:minmax(0,1fr) 76px minmax(0,1fr);
+align-items:center;
+gap:12px;
+margin:8px 2px 16px;
+min-height:76px;
+}
+
+.summary-row-with-plus .summary-total,
+.summary-row-with-plus .summary-received{
+font-size:20px;
+line-height:1.12;
+font-weight:800;
+margin:0;
+white-space:nowrap;
+font-variant-numeric:tabular-nums;
+overflow:hidden;
+text-overflow:ellipsis;
+}
+
+.summary-row-with-plus .summary-total{
+grid-column:1;
+text-align:left;
+padding-right:8px;
+}
+
+.summary-row-with-plus .summary-received{
+grid-column:3;
+text-align:right;
+padding-left:8px;
+}
+
+.summary-row-with-plus .summary-plus{
+grid-column:2;
+justify-self:center;
+align-self:center;
+width:76px;
+height:76px;
+min-width:76px;
+min-height:76px;
+max-width:76px;
+max-height:76px;
+border-radius:50%;
+font-size:54px;
+line-height:1;
+padding:0 0 5px;
+margin:0;
+}
+
+.summary-action-row-single{
+display:none;
+}
+
+@media(max-width:390px){
+.summary-row-with-plus{
+grid-template-columns:minmax(0,1fr) 68px minmax(0,1fr);
+min-height:68px;
+gap:10px;
+}
+
+.summary-row-with-plus .summary-plus{
+width:68px;
+height:68px;
+min-width:68px;
+min-height:68px;
+max-width:68px;
+max-height:68px;
+font-size:48px;
+}
+}
+
+
+/* v2.4.0 absolute center plus */
+.summary-row-with-plus{
+position:relative;
+display:block;
+height:76px;
+margin:8px 2px 16px;
+}
+
+.summary-row-with-plus .summary-total,
+.summary-row-with-plus .summary-received{
+position:absolute;
+top:50%;
+transform:translateY(-50%);
+font-size:20px;
+line-height:1.12;
+font-weight:800;
+margin:0;
+white-space:nowrap;
+font-variant-numeric:tabular-nums;
+max-width:calc(50% - 48px);
+overflow:hidden;
+text-overflow:ellipsis;
+}
+
+.summary-row-with-plus .summary-total{
+left:0;
+text-align:left;
+}
+
+.summary-row-with-plus .summary-received{
+right:0;
+text-align:right;
+}
+
+.summary-row-with-plus .summary-plus{
+position:absolute;
+left:50%;
+top:50%;
+transform:translate(-50%,-50%);
+width:76px;
+height:76px;
+min-width:76px;
+min-height:76px;
+max-width:76px;
+max-height:76px;
+border-radius:50%;
+font-size:54px;
+line-height:1;
+padding:0 0 5px;
+margin:0;
+}
+
+.summary-action-row-single{
+display:none;
+}
+
+@media(max-width:390px){
+.summary-row-with-plus{
+height:68px;
+}
+
+.summary-row-with-plus .summary-total,
+.summary-row-with-plus .summary-received{
+max-width:calc(50% - 42px);
+}
+
+.summary-row-with-plus .summary-plus{
+width:68px;
+height:68px;
+min-width:68px;
+min-height:68px;
+max-width:68px;
+max-height:68px;
+font-size:48px;
+}
+}
+
+
+/* v2.4.0 koers min/max kaarten */
+.chart-stats{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+margin-top:10px;
+}
+
+.chart-stat-card{
+background:rgba(255,255,255,.04);
+border:1px solid rgba(255,255,255,.08);
+border-radius:16px;
+padding:10px 12px;
+min-width:0;
+}
+
+.chart-stat-card span{
+display:block;
+color:var(--muted);
+font-size:12px;
+font-weight:650;
+line-height:1.2;
+margin-bottom:6px;
+}
+
+.chart-stat-card strong{
+display:block;
+color:var(--text);
+font-size:16px;
+font-weight:850;
+line-height:1.15;
+font-variant-numeric:tabular-nums;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+}
+
+body.light-theme .chart-stat-card{
+background:#f8f8fb;
+border-color:#e5e5ea;
+}
+
+
+/* v2.4.0 koers statistieken omhoog */
+.currency-current{
+grid-template-columns:1fr 1fr;
+}
+
+.currency-current .chart-stat-card{
+background:rgba(255,255,255,.04);
+border:1px solid rgba(255,255,255,.06);
+border-radius:16px;
+padding:9px 12px;
+min-width:0;
+}
+
+.currency-current .chart-stat-card span{
+display:block;
+color:var(--muted);
+font-size:11px;
+font-weight:650;
+line-height:1.2;
+margin-bottom:5px;
+}
+
+.currency-current .chart-stat-card strong{
+display:block;
+color:var(--text);
+font-size:15px;
+font-weight:850;
+line-height:1.15;
+font-variant-numeric:tabular-nums;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+}
+
+body.light-theme .currency-current .chart-stat-card{
+background:#f8f8fb;
+border-color:#e5e5ea;
+}
+
+@media(max-width:390px){
+.currency-current{
+grid-template-columns:1fr 1fr;
+}
+}
+
+
+/* v2.4.0 light mode full-page background fix */
+html:has(body.light-theme){
+background:#f2f2f7;
+}
+
+body.light-theme{
+background:#f2f2f7;
+min-height:100vh;
+}
+
+body.light-theme::before{
+background:#f2f2f7;
+}
+
+body.light-theme .wrap{
+background:#f2f2f7;
+}
+
+
+/* v2.4.0 light mode uitgeklapte hoofdmenu's wit */
+body.light-theme .wrap > .accordion-card,
+body.light-theme .wrap > .accordion-card > .accordion-toggle,
+body.light-theme .wrap > .accordion-card > .accordion-body{
+  background:#ffffff !important;
+}
+
+/* Instellingen: alleen de submenu-kaarten blijven hun eigen bestaande vorm/kleur houden */
+body.light-theme .settings-stack{
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+}
+
+body.light-theme .settings-stack .sub-accordion{
+  background:#f2f2f7 !important;
+}
+
+body.light-theme .settings-stack .sub-accordion > .accordion-toggle,
+body.light-theme .settings-stack .sub-accordion > .accordion-body{
+  background:#f2f2f7 !important;
+}
+
+
+/* v2.4.0 light mode koersinhoud niet als grijs vlak */
+body.light-theme .wrap > .accordion-card,
+body.light-theme .wrap > .accordion-card > .accordion-toggle,
+body.light-theme .wrap > .accordion-card > .accordion-body{
+  background:#ffffff !important;
+}
+
+/* Koersen: grafiek en periodegebied niet meer als losse grijze vlakken */
+body.light-theme [data-accordion="currency"] .pln-chart-wrap,
+body.light-theme [data-accordion="currency"] .range-switch{
+  background:transparent !important;
+  border-color:transparent !important;
+}
+
+/* Koersen: statistiekkaartjes blijven subtiel, maar niet de hele sectie */
+body.light-theme [data-accordion="currency"] .currency-current > div,
+body.light-theme [data-accordion="currency"] .currency-current .chart-stat-card{
+  background:#f8f8fb !important;
+  border-color:#e5e5ea !important;
+}
+
+/* Instellingen behoudt de afgesproken laagopbouw */
+body.light-theme .settings-stack{
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+}
+
+body.light-theme .settings-stack .sub-accordion{
+  background:#f2f2f7 !important;
+}
+
+body.light-theme .settings-stack .sub-accordion > .accordion-toggle,
+body.light-theme .settings-stack .sub-accordion > .accordion-body{
+  background:#f2f2f7 !important;
+}
+
+
+/* v2.4.0 onderhoud
+   Veilige opschoning: lege oude dev-blokken en overtollige witregels verwijderd.
+   Geen bedoelde visuele of functionele wijzigingen.
+ */
+
+
+/* v2.4.0 light mode analysebalken zachter */
+body.light-theme .barTrack{
+  background:#f2f2f7 !important;
+  border-color:#d1d1d6 !important;
+}
+
+body.light-theme .barTrack::before{
+  background:#d1d1d6 !important;
+}
+
+</style>
+</head>
+<body>
+  <div id="splash" class="splash">
+    <img src="icons/icon-512.png" alt="">
+    <h1>Vakantie-uitgaven</h1>
+  </div>
+  <div id="updateBar" class="update-bar hidden">
+    <span>Nieuwe versie beschikbaar</span>
+    <button id="updateNow" type="button">Bijwerken</button>
+  </div>
+  <div id="undoToast" class="undo-toast hidden"><span>Uitgave verwijderd</span><button id="undoDeleteBtn" type="button">Ongedaan maken</button></div>
+  <main class="wrap">
+    <section class="summary-bar">
+      <div class="summary-row summary-row-with-plus">
+        <div class="summary-total" id="netTotal">€ 0,00</div>
+        <button id="addBtn" class="summary-plus" type="button">+</button>
+        <div class="summary-received" id="receivedMini">€ 0,00</div>
+      </div>
+      <div id="rateBadge" class="summary-rate-hidden"><span>PLN</span><b>—</b><button id="resetRateCache" type="button" class="rate-reset" aria-label="Koerscache resetten">×</button></div>
+      <div class="summary-entry-card">
+        <h2 id="entryTitle">Nieuwe regel</h2>
+        <div id="entryBox" class="entry hidden">
+          <div class="type-switch">
+            <button id="expenseTypeBtn" type="button" data-type="expense" class="active">Uitgave</button>
+            <button id="incomeTypeBtn" type="button" data-type="income">Ontvangen</button>
+          </div>
+          <select id="categoryInput"></select>
+          <input id="dateInput" type="date">
+          <div class="currency-row">
+            <select id="currencyInput">
+              <option value="EUR">Euro</option>
+              <option value="PLN">Zloty</option>
+            </select>
+            <input id="rateInput" inputmode="decimal" type="text" placeholder="Koers">
+          </div>
+          <div class="amount-row">
+            <input id="amountInput" inputmode="decimal" type="text" placeholder="Bedrag">
+          </div>
+          <input id="noteInput" class="full" type="text" placeholder="Opmerking">
+          <div class="actions">
+            <button id="confirmBtn" class="confirm" type="button">✓</button>
+            <button id="cancelBtn" class="cancel" type="button">×</button>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="card accordion-card" data-accordion="expenses">
+      <button class="accordion-toggle" type="button" aria-expanded="true">
+        <span class="accordion-title">
+          <strong>Uitgaven</strong>
+          <span>Filteren, sorteren en overzicht</span>
+        </span>
+        <span class="accordion-chevron" aria-hidden="true"></span>
+      </button>
+      <div class="accordion-body">
+      <div class="tools">
+        <select id="filterSelect"></select>
+        <select id="sortSelect">
+          <option value="newest">Nieuwste eerst</option>
+          <option value="oldest">Oudste eerst</option>
+          <option value="category">Soort uitgave</option>
+          <option value="amountDesc">Hoogste bedrag eerst</option>
+          <option value="amountAsc">Laagste bedrag eerst</option>
+        </select>
+      </div>
+      <div class="list-head list-grid">
+        <span>Datum</span>
+        <span>Uitgave</span>
+        <span>Bedrag</span>
+      </div>
+      <div id="expenseList" class="ios-list">
+        <div class="empty">Nog geen uitgaven.</div>
+      </div>
+      </div>
+    </section>
+    <section class="card accordion-card closed" data-accordion="analysis">
+      <button class="accordion-toggle" type="button" aria-expanded="false">
+        <span class="accordion-title">
+          <strong>Analyse</strong>
+          <span>Grafiek per categorie</span>
+        </span>
+        <span class="accordion-chevron" aria-hidden="true"></span>
+      </button>
+      <div class="accordion-body">
+      <div class="chart-summary">
+        <div class="chart-pill">Grootste netto post<b id="chartTopCat">-</b></div>
+        <div class="chart-pill">Aantal uitgaven<b id="expenseCount">0</b></div>
+      </div>
+      <div id="chart" class="bars">
+        <div class="empty">Nog geen gegevens voor de grafiek.</div>
+      </div>
+      </div>
+    </section>
+    <section class="card accordion-card closed" data-accordion="currency">
+      <button class="accordion-toggle" type="button" aria-expanded="false">
+        <span class="accordion-title">
+          <strong>Koersen</strong>
+          <span>Koers, historie en statistieken</span>
+        </span>
+        <span class="accordion-chevron" aria-hidden="true"></span>
+      </button>
+      <div class="accordion-body">
+        <div class="currency-panel">
+          <div class="currency-current">
+            <div>
+              <span>Huidige koers</span>
+              <strong id="currencyCurrentRate">PLN —</strong>
+            </div>
+            <div>
+              <span>Laatst bijgewerkt</span>
+              <strong id="currencyCurrentTime">—</strong>
+            </div>
+            <div class="chart-stat-card">
+              <span>Minimum</span>
+              <strong id="plnChartMin">—</strong>
+            </div>
+            <div class="chart-stat-card">
+              <span>Maximum</span>
+              <strong id="plnChartMax">—</strong>
+            </div>
+          </div>
+
+          <div class="pln-chart-wrap inline-chart">
+            <canvas id="plnChartCanvas"></canvas>
+            <div id="plnChartLoading" class="chart-loading hidden">Koers ophalen…</div>
+          </div>
+
+          <div class="range-switch" id="plnRangeSwitch">
+            <button type="button" data-range="5d">5D</button>
+            <button type="button" data-range="1m" class="active">1M</button>
+            <button type="button" data-range="6m">6M</button>
+            <button type="button" data-range="1y">1J</button>
+            <button type="button" data-range="5y">5J</button>
+            <button type="button" data-range="20y">20J</button>
+          </div>
+
+
+        </div>
+      </div>
+    </section>
+
+    <section class="card accordion-card closed" data-accordion="settings">
+      <button class="accordion-toggle" type="button" aria-expanded="false">
+        <span class="accordion-title">
+          <strong>Instellingen</strong>
+          <span>Beheer, import/export en app-opties</span>
+        </span>
+        <span class="accordion-chevron" aria-hidden="true"></span>
+      </button>
+      <div class="accordion-body">
+        <div class="settings-stack">
+          <section class="sub-accordion accordion-card closed" data-accordion="settings-preferences">
+            <button class="accordion-toggle" type="button" aria-expanded="false">
+              <span class="accordion-title">
+                <strong>Voorkeuren</strong>
+                <span>Taal en weergave</span>
+              </span>
+              <span class="accordion-chevron" aria-hidden="true"></span>
+            </button>
+            <div class="accordion-body">
+              <div class="preferences-grid">
+                <label class="preference-row">
+                  <span id="languagePreferenceLabel">Taal</span>
+                  <select id="languageSelect">
+                    <option value="nl">Nederlands</option>
+                    <option value="pl">Polski</option>
+                  </select>
+                </label>
+                <label class="preference-row">
+                  <span id="themePreferenceLabel">Weergave</span>
+                  <select id="themeSelect">
+                    <option value="dark">Donker</option>
+                    <option value="light">Licht</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+          </section>
+
+          <section class="sub-accordion accordion-card closed" data-accordion="settings-categories">
+            <button class="accordion-toggle" type="button" aria-expanded="false">
+              <span class="accordion-title">
+                <strong>Posten beheren</strong>
+                <span>Categorieën toevoegen of verwijderen</span>
+              </span>
+              <span class="accordion-chevron" aria-hidden="true"></span>
+            </button>
+            <div class="accordion-body">
+      <div class="manage-categories">
+        <input id="newCategoryInput" type="text" placeholder="Nieuwe post">
+        <button id="addCategoryBtn" type="button">Toevoegen</button>
+        <button id="editCategoryBtn" class="category-edit-btn" type="button" aria-label="Posten verwijderen">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 7h16"></path>
+            <path d="M10 11v6"></path>
+            <path d="M14 11v6"></path>
+            <path d="M6 7l1 14h10l1-14"></path>
+            <path d="M9 7V4h6v3"></path>
+          </svg>
+        </button>
+      </div>
+      <div class="category-list" id="categoryList"></div>
+            </div>
+          </section>
+
+          <section class="sub-accordion accordion-card closed" data-accordion="settings-data">
+            <button class="accordion-toggle" type="button" aria-expanded="false">
+              <span class="accordion-title">
+                <strong>Beheer</strong>
+                <span>Import, export, opslag en status</span>
+              </span>
+              <span class="accordion-chevron" aria-hidden="true"></span>
+            </button>
+            <div class="accordion-body">
+      <div class="export-wrap">
+        <button id="exportBtn" type="button">Export CSV</button>
+        <label class="import-label" for="importCsvInput">Import CSV</label>
+        <input id="importCsvInput" type="file" accept=".csv,text/csv">
+      </div>
+      <div id="importStatus" class="import-status"></div>
+
+
+              <div class="data-status" id="appDataInfo">
+                <div class="data-status-row"><span id="statusVersionLabel">Appversie</span><span id="statusVersion">v2.4.0</span></div>
+                <div class="data-status-row"><span id="statusRateLabel">Laatste PLN-update</span><span id="appRateTimestamp">—</span></div>
+                <div class="data-status-row"><span id="statusExpenseLabel">Uitgaven</span><span id="statusExpenseCount">0</span></div>
+                <div class="data-status-row"><span id="statusCategoryLabel">Posten</span><span id="statusCategoryCount">0</span></div>
+                <div class="data-status-row"><span id="statusStorageLabel">Lokale database</span><span id="statusStorageSize">0 kB</span></div>
+                <div class="data-status-row"><span id="statusCacheLabel">Cacheversie</span><span id="statusCacheVersion">v2.4.0</span></div>
+                <div class="data-status-note" id="statusStorageNote">Data wordt lokaal op dit apparaat opgeslagen.</div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>  </main>
+  <script>
+/* =========================================================
+       Vakantie-uitgaven v2.1.2-koersfix — JavaScript
+       ========================================================= */
+    (()=>{
+      "use strict";
+      const APP_VERSION = "v2.4.0";
+            const CACHE_VERSION = APP_VERSION;
+/* ---------------------------------------------------------
+         1. Configuratie en state
+         --------------------------------------------------------- */
+      const STORAGE = {
+        data: "zomervakantie-uitgaven-dropbox-v10",
+        categories: "zomervakantie-uitgaven-categories-v10",
+        rates: "vakantie-uitgaven-pln-rates-v1",
+        oldData: [
+          "zomervakantie-uitgaven-dropbox-v9",
+          "zomervakantie-uitgaven-dropbox-v8",
+          "zomervakantie-uitgaven-dropbox-v7",
+          "zomervakantie-uitgaven-dropbox-v6",
+          "zomervakantie-uitgaven-dropbox-v5",
+          "zomervakantie-uitgaven-dropbox-v4",
+          "zomervakantie-uitgaven-dropbox-v3",
+          "zomervakantie-uitgaven-dropbox-v2"
+        ]
+      };
+      const DEFAULT_CATEGORIES = [];
+      let categories = [...DEFAULT_CATEGORIES];
+      let expenses = [];
+      let editingId = null;
+      let lastDeleted = null;
+      let undoTimer = null;
+      let categoryDeleteMode = false;
+      let transactionType = "expense";
+      const $ = id => document.getElementById(id);
+      const el = {
+        splash: $("splash"),
+        updateBar: $("updateBar"),
+        updateNow: $("updateNow"),
+        netTotal: $("netTotal"),
+        receivedMini: $("receivedMini"),
+        chartTopCat: $("chartTopCat"),
+        expenseCount: $("expenseCount"),
+        chart: $("chart"),
+        rateBadge: $("rateBadge"),
+        resetRateCache: $("resetRateCache"),
+        undoToast: $("undoToast"),
+        undoDeleteBtn: $("undoDeleteBtn"),
+
+        entryTitle: $("entryTitle"),
+        entryBox: $("entryBox"),
+        addBtn: $("addBtn"),
+        confirmBtn: $("confirmBtn"),
+        cancelBtn: $("cancelBtn"),
+        expenseTypeBtn: $("expenseTypeBtn"),
+        incomeTypeBtn: $("incomeTypeBtn"),
+        categoryInput: $("categoryInput"),
+        dateInput: $("dateInput"),
+        currencyInput: $("currencyInput"),
+        rateInput: $("rateInput"),
+        amountInput: $("amountInput"),
+        noteInput: $("noteInput"),
+        filterSelect: $("filterSelect"),
+        sortSelect: $("sortSelect"),
+        expenseList: $("expenseList"),
+        newCategoryInput: $("newCategoryInput"),
+        addCategoryBtn: $("addCategoryBtn"),
+        editCategoryBtn: $("editCategoryBtn"),
+        categoryList: $("categoryList"),
+        exportBtn: $("exportBtn"),
+        importCsvInput: $("importCsvInput"),
+        importStatus: $("importStatus")
+      };
+      const ICON_EDIT = `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0 0-3L17.5 5.5a2.1 2.1 0 0 0-3 0L4 16v4z"></path>
+          <path d="M13.5 6.5l4 4"></path>
+        </svg>`;
+      const ICON_TRASH = `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 7h16"></path>
+          <path d="M10 11v6"></path>
+          <path d="M14 11v6"></path>
+          <path d="M6 7l1 14h10l1-14"></path>
+          <path d="M9 7V4h6v3"></path>
+        </svg>`;
+      /* ---------------------------------------------------------
+         2. Helpers
+         --------------------------------------------------------- */
+      const escapeHtml = value => String(value || "").replace(/[&<>"']/g, char => ({
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        '"':"&quot;",
+        "'":"&#039;"
+      }[char]));
+      function parseAmount(value){
+        const cleaned = String(value || "")
+          .replace("€","")
+          .replace("zł","")
+          .replace("PLN","")
+          .replace(/\s/g,"")
+          .replace(",",".");
+        const number = parseFloat(cleaned);
+        return Number.isFinite(number) ? number : 0;
+      }
+      const euro = value => new Intl.NumberFormat("nl-NL", {
+        style:"currency",
+        currency:"EUR"
+      }).format(value || 0);
+      const pln = value => "PLN " + new Intl.NumberFormat("nl-NL", {
+        minimumFractionDigits:2,
+        maximumFractionDigits:2
+      }).format(value || 0);
+      const rateText = value => new Intl.NumberFormat("nl-NL", {
+        minimumFractionDigits:2,
+        maximumFractionDigits:4
+      }).format(value || 0);
+      function signedEuro(value){
+        const abs = Math.abs(value || 0);
+        const prefix = value > 0 ? "+" : value < 0 ? "−" : "";
+        return prefix + euro(abs);
+      }
+      function isoToday(){
+        const d = new Date();
+        return [
+          d.getFullYear(),
+          String(d.getMonth() + 1).padStart(2,"0"),
+          String(d.getDate()).padStart(2,"0")
+        ].join("-");
+      }
+      function displayDate(value){
+        if(!value) return "";
+        const parts = String(value).split("-");
+        if(parts.length === 3 && parts[0].length === 4){
+          return `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+        return value;
+      }
+      function normalizeDate(value){
+        value = String(value || "").trim();
+        if(!value) return isoToday();
+        if(/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+        if(/^\d{2}-\d{2}-\d{4}$/.test(value)){
+          const p = value.split("-");
+          return `${p[2]}-${p[1]}-${p[0]}`;
+        }
+        if(/^\d{2}\/\d{2}\/\d{4}$/.test(value)){
+          const p = value.split("/");
+          return `${p[2]}-${p[1]}-${p[0]}`;
+        }
+        return isoToday();
+      }
+      function readJSON(key, fallback){
+        try{
+          const raw = localStorage.getItem(key);
+          return raw ? JSON.parse(raw) : fallback;
+        }catch(error){
+          return fallback;
+        }
+      }
+      function writeJSON(key, value){
+        try{
+          localStorage.setItem(key, JSON.stringify(value));
+        }catch(error){}
+      }
+      function nowTime(){
+        return new Date().toLocaleTimeString("nl-NL", {hour:"2-digit", minute:"2-digit", second:"2-digit"});
+      }
+      function debug(message){
+        if(!el.debugPanel) return;
+        const current = el.debugPanel.textContent && el.debugPanel.textContent !== "Debug nog niet gestart."
+          ? el.debugPanel.textContent + "\n"
+          : "";
+        el.debugPanel.textContent = current + "[" + nowTime() + "] " + message;
+      }
+      function clearDebug(){
+        if(el.debugPanel) el.debugPanel.textContent = "";
+      }
+      /* ---------------------------------------------------------
+         3. Opslag
+         --------------------------------------------------------- */
+      function save(){
+        writeJSON(STORAGE.data, expenses);
+        writeJSON(STORAGE.categories, categories);
+        if(typeof updateDataStatus === "function") updateDataStatus();
+        updateCurrencyPanel();
+      }
+      function load(){
+        try{
+          categories = readJSON(STORAGE.categories, [...DEFAULT_CATEGORIES]);
+          if(!Array.isArray(categories)) categories = [...DEFAULT_CATEGORIES];
+          let raw = localStorage.getItem(STORAGE.data);
+          if(!raw){
+            for(const key of STORAGE.oldData){
+              raw = localStorage.getItem(key);
+              if(raw) break;
+            }
+          }
+          expenses = raw ? JSON.parse(raw) : [];
+          if(!Array.isArray(expenses)) expenses = [];
+          expenses = expenses.map(item => {
+            const normalized = {
+              id: item.id || Date.now() + Math.random(),
+              date: normalizeDate(item.date),
+              category: item.category || "",
+              amount: Number(item.amount) || 0,
+              originalAmount: Number(item.originalAmount ?? item.amount) || 0,
+              currency: item.currency === "PLN" ? "PLN" : "EUR",
+              rate: Number(item.rate) || 1,
+              note: item.note || ""
+            };
+            if(normalized.currency === "PLN" && normalized.rate > 0 && normalized.rate < 1){
+              normalized.rate = 1 / normalized.rate;
+              normalized.amount = normalized.originalAmount / normalized.rate;
+            }
+            if(normalized.category && !categories.includes(normalized.category)){
+              categories.push(normalized.category);
+            }
+            return normalized;
+          });
+        }catch(error){
+          categories = [...DEFAULT_CATEGORIES];
+          expenses = [];
+        }
+      }
+      /* ---------------------------------------------------------
+         4. PLN-koers
+         - Rechtsboven: actuele koers, alleen bij app-start / cache-reset
+         - Invoer: historische koers van gekozen datum
+         --------------------------------------------------------- */
+      function saveRateLog(entry){
+        try{
+          const key = "vakantie-uitgaven-rate-log-v1";
+          const log = JSON.parse(localStorage.getItem(key) || "[]");
+          log.unshift({
+            time: new Date().toISOString(),
+            appVersion: APP_VERSION,
+            ...entry
+          });
+          localStorage.setItem(key, JSON.stringify(log.slice(0, 25)));
+        }catch(error){}
+      }
+
+      function clearRateCache(){
+        try{
+          localStorage.removeItem(STORAGE.rates);
+          localStorage.removeItem("vakantie-uitgaven-rate-log-v1");
+        }catch(error){}
+      }
+
+      function cachedRates(){
+        return readJSON(STORAGE.rates, {});
+      }
+
+      function saveRate(date, rate){
+        const rates = cachedRates();
+        rates[date] = rate;
+        writeJSON(STORAGE.rates, rates);
+      }
+
+      function setRateBadge(rate, state = "ok"){
+        el.rateBadge.classList.remove("loading","ok","err");
+        el.rateBadge.classList.add(state);
+        el.rateBadge.querySelector("b").textContent = rate ? rateText(rate) : "—";
+      }
+
+      function extractPlnRate(json){
+        if(!json) return 0;
+
+        if(json.rates){
+          const value = json.rates.PLN ?? json.rates.pln ?? json.rates["PLN"];
+          const rate = Number(value);
+          if(Number.isFinite(rate) && rate > 0) return rate;
+        }
+
+        const direct = Number(json.rate ?? json.value ?? json.result ?? 0);
+        return Number.isFinite(direct) && direct > 0 ? direct : 0;
+      }
+
+      async function fetchJson(url){
+        const response = await fetch(url, {
+          method: "GET",
+          cache: "no-store"
+        });
+
+        if(!response.ok){
+          throw new Error("HTTP " + response.status);
+        }
+
+        return response.json();
+      }
+
+      async function fetchRateForDate(date, latest = false){
+        date = normalizeDate(date);
+
+        const urls = latest
+          ? [
+              "https://api.frankfurter.app/latest?from=EUR&to=PLN",
+              "https://api.frankfurter.dev/v1/latest?base=EUR&symbols=PLN",
+              "https://api.frankfurter.dev/v2/rates?base=EUR&quotes=PLN"
+            ]
+          : [
+              `https://api.frankfurter.app/${date}?from=EUR&to=PLN`,
+              `https://api.frankfurter.dev/v1/${date}?base=EUR&symbols=PLN`,
+              `https://api.frankfurter.dev/v2/rates?date=${date}&base=EUR&quotes=PLN`
+            ];
+
+        let lastError = null;
+
+        for(const url of urls){
+          try{
+            const rate = extractPlnRate(await fetchJson(url));
+            if(rate) return rate;
+          }catch(error){
+            lastError = error;
+          }
+        }
+
+        throw lastError || new Error("Geen PLN-koers ontvangen");
+      }
+
+      async function getHistoricalPlnRate(date){
+        date = normalizeDate(date);
+        const cache = cachedRates();
+
+        if(cache[date]){
+          saveRateLog({source:"cache-historisch", date:date, rate:cache[date]});
+          return cache[date];
+        }
+
+        try{
+          const rate = await fetchRateForDate(date, false);
+          saveRate(date, rate);
+          saveRateLog({source:"api-historisch", date:date, rate:rate});
+          return rate;
+        }catch(error){
+          const fallback = cache[isoToday()] || 4.25;
+          saveRateLog({source:"fallback-historisch", date:date, rate:fallback});
+          return fallback;
+        }
+      }
+
+      async function updateCurrentRateBadge(){
+        const today = isoToday();
+        setRateBadge(null, "loading");
+
+        try{
+          const rate = await fetchRateForDate(today, true);
+          saveRate(today, rate);
+          setRateBadge(rate, "err");
+          saveRateLog({source:"api-actueel", date:today, rate:rate});
+        }catch(error){
+          const cached = cachedRates()[today];
+          setRateBadge(cached || 4.25, "err");
+          saveRateLog({source:cached ? "cache-actueel" : "fallback-actueel", date:today, rate:cached || 4.25});
+        }
+      }
+
+      async function updateEntryRateForDate(force = false){
+        if(el.currencyInput.value !== "PLN") return;
+
+        const date = el.dateInput.value || isoToday();
+        const rate = await getHistoricalPlnRate(date);
+
+        if(force || !el.rateInput.value || el.rateInput.dataset.auto === "1"){
+          el.rateInput.value = rateText(rate);
+          el.rateInput.dataset.auto = "1";
+        }
+      }
+
+      // Compatibiliteit met oudere event-handlers in dit bestand.
+      async function updateRateForDate(force = false){
+        return updateEntryRateForDate(force);
+      }
+
+      /* ---------------------------------------------------------
+         5. Invoer
+         --------------------------------------------------------- */
+      function setTransactionType(type){
+        transactionType = type === "income" ? "income" : "expense";
+        el.expenseTypeBtn.classList.toggle("active", transactionType === "expense");
+        el.incomeTypeBtn.classList.toggle("active", transactionType === "income");
+      }
+      function showEntry(item = null){
+        el.entryBox.classList.remove("hidden");
+        el.addBtn.classList.add("hidden");
+        if(item){
+          editingId = item.id;
+          el.entryTitle.textContent = "Uitgave aanpassen";
+          el.categoryInput.value = item.category;
+          el.dateInput.value = item.date || isoToday();
+          el.currencyInput.value = item.currency || "EUR";
+          el.rateInput.value = item.currency === "PLN" ? String(item.rate || "").replace(".",",") : "";
+          el.rateInput.dataset.auto = "0";
+          el.amountInput.value = String(Math.abs(item.originalAmount || item.amount || "")).replace(".",",");
+          el.noteInput.value = item.note || "";
+          el.rateInput.disabled = item.currency !== "PLN";
+          setTransactionType((item.originalAmount || item.amount) > 0 ? "income" : "expense");
+        }else{
+          editingId = null;
+          el.entryTitle.textContent = "Nieuwe regel";
+          el.categoryInput.value = categories[0] || "";
+          el.dateInput.value = isoToday();
+          el.currencyInput.value = "EUR";
+          el.rateInput.value = "";
+          el.rateInput.dataset.auto = "0";
+          el.amountInput.value = "";
+          el.noteInput.value = "";
+          el.rateInput.disabled = true;
+          setTransactionType("expense");
+        }
+        updateEntryRateForDate(false);
+        setTimeout(() => el.amountInput.focus(), 100);
+      }
+      function hideEntry(){
+        editingId = null;
+        el.entryTitle.textContent = "Nieuwe regel";
+        el.entryBox.classList.add("hidden");
+        el.addBtn.classList.remove("hidden");
+        el.amountInput.value = "";
+        el.noteInput.value = "";
+        el.rateInput.value = "";
+        el.rateInput.dataset.auto = "0";
+        el.rateInput.disabled = true;
+        setTransactionType("expense");
+      }
+      function buildExpense(id = null){
+        let originalAmount = Math.abs(parseAmount(el.amountInput.value));
+        if(transactionType === "expense") originalAmount = -originalAmount;
+        const currency = el.currencyInput.value;
+        const rate = currency === "PLN" ? parseAmount(el.rateInput.value) : 1;
+        if(el.amountInput.value.trim() === ""){
+          el.amountInput.focus();
+          return null;
+        }
+        if(!el.categoryInput.value){
+          el.categoryInput.focus();
+          return null;
+        }
+        if(currency === "PLN" && (!rate || rate <= 0)){
+          el.rateInput.focus();
+          return null;
+        }
+        return {
+          id: id || Date.now() + Math.random(),
+          date: el.dateInput.value || isoToday(),
+          category: el.categoryInput.value,
+          amount: currency === "PLN" ? originalAmount / rate : originalAmount,
+          originalAmount,
+          currency,
+          rate,
+          note: el.noteInput.value.trim()
+        };
+      }
+      function saveEntry(){
+        const item = buildExpense(editingId);
+        if(!item) return;
+        if(editingId){
+          expenses = expenses.map(existing => String(existing.id) === String(editingId) ? item : existing);
+        }else{
+          expenses.push(item);
+        }
+        save();
+        hideEntry();
+        render();
+      }
+      function showUndoToast(item){
+        lastDeleted = item;
+        if(undoTimer) clearTimeout(undoTimer);
+        if(el.undoToast) el.undoToast.classList.remove("hidden");
+        undoTimer = setTimeout(() => {
+          if(el.undoToast) el.undoToast.classList.add("hidden");
+          lastDeleted = null;
+        }, 5000);
+      }
+
+      function undoDelete(){
+        if(!lastDeleted) return;
+        expenses.push(lastDeleted);
+        lastDeleted = null;
+        if(undoTimer) clearTimeout(undoTimer);
+        if(el.undoToast) el.undoToast.classList.add("hidden");
+        save();
+        render();
+      }
+
+      function deleteExpense(id){
+        const item = findExpense(id);
+        if(!item) return;
+        expenses = expenses.filter(existing => String(existing.id) !== String(id));
+        save();
+        render();
+        showUndoToast(item);
+      }
+      const findExpense = id => expenses.find(item => String(item.id) === String(id)) || null;
+      /* ---------------------------------------------------------
+         6. Categorieën
+         --------------------------------------------------------- */
+      function categoryIsUsed(category){
+        return expenses.some(item => item.category === category);
+      }
+      function addCategory(){
+        const value = el.newCategoryInput.value.trim();
+        if(!value) return;
+        const exists = categories.some(category => category.toLowerCase() === value.toLowerCase());
+        if(!exists){
+          categories.push(value);
+          save();
+          render();
+        }
+        el.newCategoryInput.value = "";
+      }
+      function deleteCategory(category){
+        if(categoryIsUsed(category)) return;
+        categories = categories.filter(item => item !== category);
+        save();
+        render();
+      }
+      function renderCategoryOptions(){
+        const options = categories.map(category => `<option>${escapeHtml(category)}</option>`).join("");
+        el.categoryInput.innerHTML = options;
+        const currentFilter = el.filterSelect.value || "Alles";
+        el.filterSelect.innerHTML = `<option value="Alles">${t("showAll")}</option>${options}`;
+        el.filterSelect.value = categories.includes(currentFilter) ? currentFilter : "Alles";
+        el.categoryList.innerHTML = categories.map(category => {
+          const used = categoryIsUsed(category);
+          const modeClass = categoryDeleteMode ? (used ? "locked" : "can-delete") : "";
+          return `<button class="chip ${modeClass}" data-category="${escapeHtml(category)}" type="button">${escapeHtml(category)}</button>`;
+        }).join("");
+        document.querySelectorAll("[data-category]").forEach(button => {
+          button.onclick = () => {
+            if(categoryDeleteMode) deleteCategory(button.dataset.category);
+          };
+        });
+      }
+      /* ---------------------------------------------------------
+         7. Lijst + swipe
+         --------------------------------------------------------- */
+      function filteredSortedExpenses(){
+        let result = [...expenses];
+        if(el.filterSelect.value !== "Alles"){
+          result = result.filter(item => item.category === el.filterSelect.value);
+        }
+        switch(el.sortSelect.value){
+          case "oldest":
+            return result.sort((a,b) => String(a.date).localeCompare(String(b.date)) || (a.id - b.id));
+          case "category":
+            return result.sort((a,b) => String(a.category).localeCompare(String(b.category)));
+          case "amountDesc":
+            return result.sort((a,b) => b.amount - a.amount);
+          case "amountAsc":
+            return result.sort((a,b) => a.amount - b.amount);
+          default:
+            return result.sort((a,b) => String(b.date).localeCompare(String(a.date)) || (b.id - a.id));
+        }
+      }
+      function closeSwipeExcept(active = null){
+        document.querySelectorAll(".expense-cell").forEach(cell => {
+          if(cell !== active){
+            cell.classList.remove("edit-open","delete-open","dragging");
+          }
+        });
+      }
+      function renderList(){
+        const list = filteredSortedExpenses();
+        if(!list.length){
+          el.expenseList.innerHTML = `<div class="empty">${t("emptyExpenses")}</div>`;
+          return;
+        }
+        el.expenseList.innerHTML = list.map(item => {
+          const note = item.note ? `<span class="expense-note">${escapeHtml(item.note)}</span>` : "";
+          const original = item.currency === "PLN" ? `<span class="original">${pln(item.originalAmount)}</span>` : "";
+          const amountClass = item.amount > 0 ? "income" : "outgoing";
+          return `
+            <div class="expense-cell" data-id="${item.id}">
+              <button class="swipe-action swipe-edit" data-edit="${item.id}" type="button" aria-label="Wijzig">${ICON_EDIT}</button>
+              <button class="swipe-action swipe-delete" data-delete="${item.id}" type="button" aria-label="Wis">${ICON_TRASH}</button>
+              <div class="expense-line list-grid">
+                <div class="expense-date">${escapeHtml(displayDate(item.date))}</div>
+                <div class="expense-main">
+                  <div class="expense-cat">${escapeHtml(item.category)}</div>
+                  ${note}
+                </div>
+                <div class="expense-amount-wrap">
+                  <span class="expense-amount ${amountClass}">${signedEuro(item.amount)}</span>
+                  ${original}
+                </div>
+              </div>
+            </div>
+          `;
+        }).join("");
+        attachSwipe();
+        document.querySelectorAll("[data-delete]").forEach(button => {
+          const run = event => {
+            event.preventDefault();
+            event.stopPropagation();
+            deleteExpense(button.dataset.delete);
+          };
+          button.onclick = run;
+          button.ontouchend = run;
+        });
+        document.querySelectorAll("[data-edit]").forEach(button => {
+          const run = event => {
+            event.preventDefault();
+            event.stopPropagation();
+            const item = findExpense(button.dataset.edit);
+            if(item){
+              closeSwipeExcept();
+              showEntry(item);
+            }
+          };
+          button.onclick = run;
+          button.ontouchend = run;
+        });
+      }
+      function attachSwipe(){
+        document.querySelectorAll(".expense-cell").forEach(cell => {
+          const row = cell.querySelector(".expense-line");
+          let startX = 0;
+          let startY = 0;
+          let deltaX = 0;
+          let dragging = false;
+          let moved = false;
+          function start(x, y, target){
+            if(target && target.closest(".swipe-action")) return;
+            startX = x;
+            startY = y;
+            deltaX = 0;
+            dragging = true;
+            moved = false;
+            cell.classList.add("dragging");
+            closeSwipeExcept(cell);
+          }
+          function move(x, y){
+            if(!dragging) return;
+            const mx = x - startX;
+            const my = y - startY;
+            if(Math.abs(my) > Math.abs(mx) && Math.abs(my) > 12) return;
+            if(Math.abs(mx) > 6) moved = true;
+            deltaX = Math.max(-82, Math.min(82, mx));
+            row.style.transform = `translateX(${deltaX}px)`;
+          }
+          function end(){
+            if(!dragging) return;
+            dragging = false;
+            cell.classList.remove("dragging");
+            row.style.transform = "";
+            cell.classList.remove("edit-open","delete-open");
+            if(deltaX > 38){
+              cell.classList.add("edit-open");
+            }else if(deltaX < -38){
+              cell.classList.add("delete-open");
+            }
+          }
+          cell.addEventListener("touchstart", event => {
+            if(event.touches.length === 1){
+              start(event.touches[0].clientX, event.touches[0].clientY, event.target);
+            }
+          }, {passive:true});
+          cell.addEventListener("touchmove", event => {
+            if(event.touches.length === 1){
+              move(event.touches[0].clientX, event.touches[0].clientY);
+            }
+          }, {passive:true});
+          cell.addEventListener("touchend", end);
+        });
+      }
+      /* ---------------------------------------------------------
+         8. Statistiek en grafiek
+         --------------------------------------------------------- */
+      function renderStats(){
+        let net = 0;
+        let received = 0;
+        const totals = Object.fromEntries(categories.map(category => [category,0]));
+        expenses.forEach(item => {
+          net += item.amount;
+          if(item.amount > 0){
+            received += item.amount;
+          }
+          if(item.category){
+            totals[item.category] = (totals[item.category] || 0) + item.amount;
+          }
+        });
+        let topCategory = "-";
+        let topValue = 0;
+        categories.forEach(category => {
+          const abs = Math.abs(totals[category] || 0);
+          if(abs > topValue){
+            topValue = abs;
+            topCategory = category;
+          }
+        });
+        el.netTotal.textContent = signedEuro(net);
+        el.receivedMini.textContent = "+" + euro(received);
+        el.chartTopCat.textContent = topCategory;
+        el.expenseCount.textContent = String(expenses.length);
+      }
+      function renderChart(){
+        const totals = Object.fromEntries(categories.map(category => [category,0]));
+        expenses.forEach(item => {
+          if(item.category){
+            totals[item.category] = (totals[item.category] || 0) + item.amount;
+          }
+        });
+        const max = Math.max(0, ...Object.values(totals).map(value => Math.abs(value)));
+        if(!max){
+          el.chart.innerHTML = `<div class="empty">${t("emptyChart")}</div>`;
+          return;
+        }
+        el.chart.innerHTML = categories
+          .slice()
+          .sort((a,b) => (totals[a] || 0) - (totals[b] || 0))
+          .map(category => {
+            const value = totals[category] || 0;
+            const pct = Math.round((Math.abs(value) / max) * 50);
+            const kind = value >= 0 ? "income" : "outgoing";
+            return `
+              <div>
+                <div class="barTop">
+                  <strong>${escapeHtml(category)}</strong>
+                  <span class="${kind}">${signedEuro(value)}</span>
+                </div>
+                <div class="barTrack">
+                  <div class="barFill ${kind}" style="width:${pct}%"></div>
+                </div>
+              </div>
+            `;
+          })
+          .join("");
+      }
+      /* ---------------------------------------------------------
+         9. CSV import/export
+         --------------------------------------------------------- */
+      function exportCSV(){
+        const lines = ["App-versie;"+APP_VERSION, "Type;Datum;Uitgave;Bedrag EUR;Origineel bedrag;Valuta;Koers;Opmerking"];
+        categories.forEach(category => {
+          lines.push(["POST","",category,"","","","",""].join(";"));
+        });
+        expenses.forEach(item => {
+          lines.push([
+            "UITGAVE",
+            displayDate(item.date),
+            item.category,
+            String(item.amount).replace(".",","),
+            String(item.originalAmount).replace(".",","),
+            item.currency,
+            String(item.rate).replace(".",","),
+            String(item.note || "").replace(/;/g,",")
+          ].join(";"));
+        });
+        const blob = new Blob([lines.join("\n")], {type:"text/csv;charset=utf-8"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "zomervakantie-uitgaven.csv";
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+      function parseCsvLine(line){
+        const result = [];
+        let current = "";
+        let inQuotes = false;
+        for(let i = 0; i < line.length; i++){
+          const ch = line[i];
+          const next = line[i + 1];
+          if(ch === '"' && inQuotes && next === '"'){
+            current += '"';
+            i++;
+          }else if(ch === '"'){
+            inQuotes = !inQuotes;
+          }else if(ch === ";" && !inQuotes){
+            result.push(current);
+            current = "";
+          }else{
+            current += ch;
+          }
+        }
+        result.push(current);
+        return result;
+      }
+      function importCSVText(text){
+        text = String(text || "").replace(/^\uFEFF/,"").trim();
+        if(!text){
+          el.importStatus.textContent = "CSV is leeg.";
+          return;
+        }
+        const lines = text.split(/\r?\n/).filter(line => line.trim() !== "");
+        if(lines.length < 2){
+          el.importStatus.textContent = "Geen uitgaven gevonden in CSV.";
+          return;
+        }
+        if(lines[0].toLowerCase().startsWith("app-versie;")) lines.shift();
+        const headers = parseCsvLine(lines[0]).map(header => header.trim().toLowerCase());
+        const isTyped = headers[0] === "type";
+        const column = names => {
+          for(const name of names){
+            const index = headers.indexOf(name.toLowerCase());
+            if(index >= 0) return index;
+          }
+          return -1;
+        };
+        const cols = {
+          type: column(["type"]),
+          date: column(["datum","date"]),
+          category: column(["uitgave","soort","categorie","category"]),
+          euro: column(["bedrag eur","bedrag","amount eur","amount"]),
+          original: column(["origineel bedrag","original amount"]),
+          currency: column(["valuta","currency"]),
+          rate: column(["koers","rate"]),
+          note: column(["opmerking","note","omschrijving"])
+        };
+        let imported = 0;
+        let skipped = 0;
+        let posts = 0;
+        for(let r = 1; r < lines.length; r++){
+          const row = parseCsvLine(lines[r]);
+          const type = isTyped ? String(row[cols.type] || "").trim().toUpperCase() : "UITGAVE";
+          const category = cols.category >= 0 ? String(row[cols.category] || "").trim() : "";
+          if(type === "POST"){
+            if(category && !categories.includes(category)){
+              categories.push(category);
+              posts++;
+            }
+            continue;
+          }
+          if(!category){
+            skipped++;
+            continue;
+          }
+          let currency = cols.currency >= 0 ? String(row[cols.currency] || "EUR").trim().toUpperCase() : "EUR";
+          if(currency !== "PLN") currency = "EUR";
+          let originalAmount = cols.original >= 0 ? parseAmount(row[cols.original]) : 0;
+          let amount = cols.euro >= 0 ? parseAmount(row[cols.euro]) : 0;
+          let rate = cols.rate >= 0 ? parseAmount(row[cols.rate]) : 1;
+          if(currency === "PLN"){
+            if(!originalAmount && amount) originalAmount = amount;
+            if(!rate || rate <= 0) rate = originalAmount && amount ? originalAmount / amount : 4.25;
+            amount = originalAmount / rate;
+          }else{
+            originalAmount = originalAmount || amount;
+            amount = amount || originalAmount;
+            rate = 1;
+          }
+          if(!amount && !originalAmount){
+            skipped++;
+            continue;
+          }
+          if(!categories.includes(category)){
+            categories.push(category);
+          }
+          expenses.push({
+            id: Date.now() + Math.random() + r,
+            date: normalizeDate(cols.date >= 0 ? row[cols.date] : ""),
+            category,
+            amount,
+            originalAmount,
+            currency,
+            rate,
+            note: cols.note >= 0 ? String(row[cols.note] || "").trim() : ""
+          });
+          imported++;
+        }
+        save();
+        render();
+        el.importStatus.textContent =
+          imported + " uitgave" + (imported === 1 ? "" : "n") + " geïmporteerd" +
+          (posts ? ", " + posts + " post" + (posts === 1 ? "" : "en") : "") +
+          (skipped ? ", " + skipped + " overgeslagen." : ".");
+      }
+      function importCSVFile(file){
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = event => {
+          importCSVText(event.target.result);
+          el.importCsvInput.value = "";
+        };
+        reader.onerror = () => {
+          el.importStatus.textContent = "Importeren mislukt.";
+        };
+        reader.readAsText(file, "utf-8");
+      }
+      /* ---------------------------------------------------------
+         10. Splashscreen en PWA
+         --------------------------------------------------------- */
+      function playSplash(){
+        document.body.classList.add("loading");
+        el.splash.classList.add("play");
+        setTimeout(() => el.splash.classList.add("fade-out"), 1800);
+        setTimeout(() => {
+          el.splash.classList.add("hide");
+          document.body.classList.remove("loading");
+        }, 2000);
+      }
+      function registerServiceWorker(){
+        if(!("serviceWorker" in navigator)) return;
+        let waitingWorker = null;
+        navigator.serviceWorker.register("service-worker.js").then(reg => {
+          reg.addEventListener("updatefound", () => {
+            const worker = reg.installing;
+            if(!worker) return;
+            worker.addEventListener("statechange", () => {
+              if(worker.state === "installed" && navigator.serviceWorker.controller){
+                waitingWorker = worker;
+                el.updateBar.classList.remove("hidden");
+              }
+            });
+          });
+        }).catch(() => {});
+        el.updateNow.onclick = () => {
+          if(waitingWorker){
+            waitingWorker.postMessage({type:"SKIP_WAITING"});
+          }else{
+            location.reload();
+          }
+        };
+        navigator.serviceWorker.addEventListener("controllerchange", () => {
+          location.reload();
+        });
+      }
+
+      function forceCloseAllAccordions(){
+        document.querySelectorAll(".accordion-card").forEach(section => {
+          section.classList.add("closed");
+          const button = section.querySelector(":scope > .accordion-toggle");
+          if(button) button.setAttribute("aria-expanded", "false");
+        });
+
+        try{
+          const closedState = {};
+          document.querySelectorAll(".accordion-card").forEach(section => {
+            if(section.dataset.accordion) closedState[section.dataset.accordion] = false;
+          });
+          localStorage.setItem(ACCORDION_KEY, JSON.stringify(closedState));
+        }catch(error){}
+      }
+
+      function initClosedAccordionLifecycle(){
+        forceCloseAllAccordions();
+
+        window.addEventListener("pageshow", () => {
+          forceCloseAllAccordions();
+        });
+
+        window.addEventListener("pagehide", () => {
+          forceCloseAllAccordions();
+        });
+
+        document.addEventListener("visibilitychange", () => {
+          if(document.visibilityState === "visible" || document.visibilityState === "hidden"){
+            forceCloseAllAccordions();
+          }
+        });
+      }
+
+      function initAccordions(){
+        const storageKey = "vakantie-uitgaven-accordions-v1";
+        const defaults = {
+          expenses:false,
+          analysis:false,
+          currency:false,
+          settings:false,
+          "settings-preferences":false,
+          "settings-categories":false,
+          "settings-data":false
+        };
+        let state = defaults;
+        try{
+          state = {...defaults, ...JSON.parse(localStorage.getItem(storageKey) || "{}")};
+        }catch(error){}
+
+        document.querySelectorAll("[data-accordion]").forEach(section => {
+          const key = section.dataset.accordion;
+          const button = section.querySelector(".accordion-toggle");
+          if(!button) return;
+
+          const apply = open => {
+            section.classList.toggle("closed", !open);
+            button.setAttribute("aria-expanded", open ? "true" : "false");
+          };
+
+          apply(state[key] !== false);
+
+          button.addEventListener("click", () => {
+            const open = section.classList.contains("closed");
+            state[key] = open;
+            apply(open);
+            try{
+              localStorage.setItem(storageKey, JSON.stringify(state));
+            }catch(error){}
+            if(key === "currency" && open){
+              updateCurrencyPanel();
+              loadPlnChart(section.dataset.range || "1m");
+            }
+          });
+        });
+      }
+
+
+      /* ---------------------------------------------------------
+         10b. PLN koersgrafiek
+         --------------------------------------------------------- */
+      function addDays(date, days){
+        const d = new Date(date);
+        d.setDate(d.getDate() + days);
+        return d;
+      }
+
+      function addMonths(date, months){
+        const d = new Date(date);
+        d.setMonth(d.getMonth() + months);
+        return d;
+      }
+
+      function addYears(date, years){
+        const d = new Date(date);
+        d.setFullYear(d.getFullYear() + years);
+        return d;
+      }
+
+      function isoDateFromDate(date){
+        return [
+          date.getFullYear(),
+          String(date.getMonth() + 1).padStart(2,"0"),
+          String(date.getDate()).padStart(2,"0")
+        ].join("-");
+      }
+
+      function niceDateLabel(date){
+        const d = new Date(date + "T12:00:00");
+        return d.toLocaleDateString("nl-NL", {day:"numeric", month:"short", year:"numeric"});
+      }
+
+      function plnChartRange(range){
+        const end = new Date();
+        const map = {
+          "5d": {start:addDays(end, -7), label:"laatste 5 dagen", group:"day"},
+          "1m": {start:addMonths(end, -1), label:"laatste maand", group:"day"},
+          "6m": {start:addMonths(end, -6), label:"laatste 6 maanden", group:"day"},
+          "1y": {start:addYears(end, -1), label:"laatste jaar", group:"month"},
+          "5y": {start:addYears(end, -5), label:"laatste 5 jaar", group:"month"},
+          "20y": {start:addYears(end, -20), label:"laatste 20 jaar", group:"month"}
+        };
+        const item = map[range] || map["1m"];
+        return {
+          start:isoDateFromDate(item.start),
+          end:isoDateFromDate(end),
+          label:item.label,
+          group:item.group
+        };
+      }
+
+      function extractSeriesFromRates(json){
+        const rows = [];
+        if(!json) return rows;
+
+        if(json.rates && typeof json.rates === "object"){
+          Object.keys(json.rates).sort().forEach(date => {
+            const rate = Number(json.rates[date]?.PLN ?? json.rates[date]?.pln ?? 0);
+            if(rate > 0) rows.push({date, rate});
+          });
+          return rows;
+        }
+
+        if(Array.isArray(json.data)){
+          json.data.forEach(item => {
+            const rate = Number(item.rate ?? item.value ?? 0);
+            const date = item.date || item.period || "";
+            if(date && rate > 0) rows.push({date, rate});
+          });
+          return rows.sort((a,b) => a.date.localeCompare(b.date));
+        }
+
+        if(Array.isArray(json)){
+          json.forEach(item => {
+            const rate = Number(item.rate ?? item.value ?? 0);
+            const date = item.date || item.period || "";
+            if(date && rate > 0) rows.push({date, rate});
+          });
+          return rows.sort((a,b) => a.date.localeCompare(b.date));
+        }
+
+        return rows;
+      }
+
+      async function fetchPlnSeries(range){
+        const r = plnChartRange(range);
+        const cacheKey = "vakantie-uitgaven-pln-chart-v1-" + range + "-" + r.end;
+        const cached = readJSON(cacheKey, null);
+        if(cached && Array.isArray(cached.rows) && cached.rows.length){
+          return {...cached, cached:true};
+        }
+
+        const groupQuery = r.group === "month" ? "&group=month" : "";
+        const urls = [
+          `https://api.frankfurter.app/${r.start}..${r.end}?from=EUR&to=PLN${groupQuery}`,
+          `https://api.frankfurter.dev/v1/${r.start}..${r.end}?base=EUR&symbols=PLN${groupQuery}`,
+          `https://api.frankfurter.dev/v2/rates?start_date=${r.start}&end_date=${r.end}&base=EUR&quotes=PLN${groupQuery}`
+        ];
+
+        let lastError = null;
+        for(const url of urls){
+          try{
+            const rows = extractSeriesFromRates(await fetchJson(url));
+            if(rows.length){
+              const data = {range, label:r.label, start:r.start, end:r.end, rows};
+              writeJSON(cacheKey, data);
+              return data;
+            }
+          }catch(error){
+            lastError = error;
+          }
+        }
+        throw lastError || new Error("Geen koersgrafiek ontvangen");
+      }
+
+      function drawPlnChart(rows){
+        const canvas = document.getElementById("plnChartCanvas");
+        if(!canvas || !rows.length) return;
+
+        const parent = canvas.parentElement;
+        const bounds = parent.getBoundingClientRect();
+        const ratio = window.devicePixelRatio || 1;
+        const chartWidth = Math.max(280, Math.min(bounds.width || 320, 760));
+        const chartHeight = Math.max(180, Math.min(bounds.height || 240, 280));
+
+        canvas.width = Math.floor(chartWidth * ratio);
+        canvas.height = Math.floor(chartHeight * ratio);
+        canvas.style.width = chartWidth + "px";
+        canvas.style.height = chartHeight + "px";
+
+        const ctx = canvas.getContext("2d");
+        ctx.setTransform(ratio,0,0,ratio,0,0);
+        ctx.clearRect(0,0,chartWidth,chartHeight);
+
+        const rect = {width:chartWidth, height:chartHeight};
+        const padding = {top:18,right:12,bottom:28,left:44};
+        const w = rect.width - padding.left - padding.right;
+        const h = rect.height - padding.top - padding.bottom;
+        const values = rows.map(row => row.rate);
+        const min = Math.min(...values);
+        const max = Math.max(...values);
+        const pad = Math.max((max - min) * .12, .01);
+        const yMin = min - pad;
+        const yMax = max + pad;
+
+        const x = index => padding.left + (rows.length === 1 ? w / 2 : (index / (rows.length - 1)) * w);
+        const y = value => padding.top + ((yMax - value) / (yMax - yMin)) * h;
+
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "rgba(255,255,255,.12)";
+        ctx.fillStyle = "rgba(142,142,147,.95)";
+        ctx.font = "11px -apple-system, BlinkMacSystemFont, sans-serif";
+
+        for(let i = 0; i <= 3; i++){
+          const yy = padding.top + (h / 3) * i;
+          ctx.beginPath();
+          ctx.moveTo(padding.left, yy);
+          ctx.lineTo(padding.left + w, yy);
+          ctx.stroke();
+
+          const value = yMax - ((yMax - yMin) / 3) * i;
+          ctx.fillText(rateText(value), 4, yy + 4);
+        }
+
+        const first = rows[0].date;
+        const last = rows[rows.length - 1].date;
+        ctx.fillText(niceDateLabel(first).replace(".", ""), padding.left, rect.height - 8);
+        const lastLabel = niceDateLabel(last).replace(".", "");
+        const measure = ctx.measureText(lastLabel).width;
+        ctx.fillText(lastLabel, Math.max(padding.left, padding.left + w - measure), rect.height - 8);
+
+        const gradient = ctx.createLinearGradient(0,padding.top,0,padding.top+h);
+        gradient.addColorStop(0,"rgba(255,159,10,.25)");
+        gradient.addColorStop(1,"rgba(255,159,10,0)");
+
+        ctx.beginPath();
+        rows.forEach((row,index) => {
+          const xx = x(index);
+          const yy = y(row.rate);
+          if(index === 0) ctx.moveTo(xx,yy);
+          else ctx.lineTo(xx,yy);
+        });
+        ctx.lineTo(x(rows.length - 1), padding.top + h);
+        ctx.lineTo(x(0), padding.top + h);
+        ctx.closePath();
+        ctx.fillStyle = gradient;
+        ctx.fill();
+
+        ctx.beginPath();
+        rows.forEach((row,index) => {
+          const xx = x(index);
+          const yy = y(row.rate);
+          if(index === 0) ctx.moveTo(xx,yy);
+          else ctx.lineTo(xx,yy);
+        });
+        ctx.strokeStyle = "rgba(255,159,10,1)";
+        ctx.lineWidth = 2.5;
+        ctx.lineJoin = "round";
+        ctx.lineCap = "round";
+        ctx.stroke();
+
+        const lastRow = rows[rows.length - 1];
+        ctx.beginPath();
+        ctx.arc(x(rows.length - 1), y(lastRow.rate), 4, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(255,159,10,1)";
+        ctx.fill();
+
+        const minEl = document.getElementById("plnChartMin");
+        const maxEl = document.getElementById("plnChartMax");
+        if(minEl) minEl.textContent = rateText(min);
+        if(maxEl) maxEl.textContent = rateText(max);
+      }
+
+      async function loadPlnChart(range = "1m"){
+        const currency = document.querySelector('[data-accordion="currency"]');
+        const loading = document.getElementById("plnChartLoading");
+        const subtitle = null;
+        if(loading) loading.classList.remove("hidden");
+
+        document.querySelectorAll("#plnRangeSwitch button").forEach(button => {
+          button.classList.toggle("active", button.dataset.range === range);
+        });
+
+        try{
+          const data = await fetchPlnSeries(range);
+          if(currency) currency.dataset.range = range;
+          updateCurrencyPanel();
+          drawPlnChart(data.rows);
+        }catch(error){
+          if(subtitle) subtitle.textContent = t("chartError");
+        }finally{
+          if(loading) loading.classList.add("hidden");
+          if(currency) currency.dataset.range = range;
+        }
+      }
+
+      function openPlnChart(){
+        const currency = document.querySelector('[data-accordion="currency"]');
+        if(currency && currency.classList.contains("closed")){
+          const button = currency.querySelector(".accordion-toggle");
+          if(button) button.click();
+        }
+      }
+
+      function closePlnChart(){}
+
+
+      function initPlnChart(){
+        document.querySelectorAll("#plnRangeSwitch button").forEach(button => {
+          button.addEventListener("click", () => loadPlnChart(button.dataset.range));
+        });
+
+        window.addEventListener("resize", () => {
+          const currency = document.querySelector('[data-accordion="currency"]');
+          if(currency && !currency.classList.contains("closed")){
+            loadPlnChart(currency.dataset.range || "1m");
+          }
+        });
+      }
+
+
+      /* ---------------------------------------------------------
+         10c. Voorkeuren en taal
+         --------------------------------------------------------- */
+      const PREFS_KEY = "vakantie-uitgaven-preferences-v1";
+      let preferences = {
+        language:"nl",
+        theme:"dark"
+      };
+
+      const UI_TEXT = {
+        nl:{
+          netTotal:"Netto totaal",
+          plnCurrent:"PLN actueel",
+          expensesTitle:"Uitgaven",
+          expensesSubtitle:"Filteren, sorteren en overzicht",
+          analysisTitle:"Analyse",
+          analysisSubtitle:"Grafiek per categorie",
+          currencyTitle:"Koersen",
+          currencySubtitle:"Koers, historie en statistieken",
+          currentRate:"Huidige koers",
+          lastUpdated:"Laatst bijgewerkt",
+          settingsTitle:"Instellingen",
+          settingsSubtitle:"Beheer, import/export en app-opties",
+          preferencesTitle:"Voorkeuren",
+          preferencesSubtitle:"Taal en weergave",
+          categoriesTitle:"Posten beheren",
+          categoriesSubtitle:"Categorieën toevoegen of verwijderen",
+          dataTitle:"Beheer",
+          dataSubtitle:"Import, export, opslag en status",
+          language:"Taal",
+          theme:"Weergave",
+          dark:"Donker",
+          light:"Licht",
+          expense:"Uitgave",
+          income:"Ontvangen",
+          euro:"Euro",
+          zloty:"Zloty",
+          ratePlaceholder:"Koers",
+          amountPlaceholder:"Bedrag",
+          notePlaceholder:"Opmerking",
+          showAll:"Alles tonen",
+          newest:"Nieuwste eerst",
+          oldest:"Oudste eerst",
+          category:"Soort uitgave",
+          amountDesc:"Hoogste bedrag eerst",
+          amountAsc:"Laagste bedrag eerst",
+          emptyExpenses:"Nog geen uitgaven.",
+          biggestNet:"Grootste netto post",
+          expenseCount:"Aantal uitgaven",
+          emptyChart:"Nog geen gegevens voor de grafiek.",
+          newCategory:"Nieuwe post",
+          add:"Toevoegen",
+          exportCsv:"Export CSV",
+          importCsv:"Import CSV",
+          dataInfo:"Data wordt lokaal op dit apparaat opgeslagen.",
+          statusVersion:"Appversie",
+          statusRate:"Laatste PLN-update",
+          statusExpenses:"Uitgaven",
+          statusCategories:"Posten",
+          statusStorage:"Lokale database",
+          statusCache:"Cacheversie",
+          chartTitle:"Zloty koers",
+          chartSubtitle:"EUR naar PLN · laatste maand",
+          chartLoading:"Koers ophalen…",
+          chartError:"Koersgrafiek kon niet worden geladen",
+          chartPrefix:"EUR naar PLN · ",
+          deleted:"Uitgave verwijderd",
+          undo:"Ongedaan maken",
+          updateAvailable:"Nieuwe versie beschikbaar",
+          updateNow:"Bijwerken"
+        },
+        pl:{
+          netTotal:"Suma netto",
+          plnCurrent:"PLN aktualny",
+          expensesTitle:"Wydatki",
+          expensesSubtitle:"Filtrowanie, sortowanie i przegląd",
+          analysisTitle:"Analiza",
+          analysisSubtitle:"Wykres według kategorii",
+          currencyTitle:"Waluta",
+          currencySubtitle:"Aktualny kurs PLN i wykres",
+          currentRate:"Aktualny kurs",
+          lastUpdated:"Ostatnia aktualizacja",
+          settingsTitle:"Ustawienia",
+          settingsSubtitle:"Zarządzanie, import/eksport i opcje",
+          preferencesTitle:"Preferencje",
+          preferencesSubtitle:"Język i wygląd",
+          categoriesTitle:"Kategorie",
+          categoriesSubtitle:"Dodawanie i usuwanie kategorii",
+          dataTitle:"Zarządzanie",
+          dataSubtitle:"Import, eksport, pamięć i status",
+          language:"Język",
+          theme:"Wygląd",
+          dark:"Ciemny",
+          light:"Jasny",
+          expense:"Wydatek",
+          income:"Otrzymane",
+          euro:"Euro",
+          zloty:"Złoty",
+          ratePlaceholder:"Kurs",
+          amountPlaceholder:"Kwota",
+          notePlaceholder:"Notatka",
+          showAll:"Pokaż wszystko",
+          newest:"Najnowsze najpierw",
+          oldest:"Najstarsze najpierw",
+          category:"Kategoria",
+          amountDesc:"Najwyższa kwota najpierw",
+          amountAsc:"Najniższa kwota najpierw",
+          emptyExpenses:"Brak wydatków.",
+          biggestNet:"Największa pozycja netto",
+          expenseCount:"Liczba wydatków",
+          emptyChart:"Brak danych do wykresu.",
+          newCategory:"Nowa kategoria",
+          add:"Dodaj",
+          exportCsv:"Eksport CSV",
+          importCsv:"Import CSV",
+          dataInfo:"Dane są zapisywane lokalnie na tym urządzeniu.",
+          statusVersion:"Wersja aplikacji",
+          statusRate:"Ostatnia aktualizacja PLN",
+          statusExpenses:"Wydatki",
+          statusCategories:"Kategorie",
+          statusStorage:"Lokalna baza danych",
+          statusCache:"Wersja cache",
+          chartTitle:"Kurs złotego",
+          chartSubtitle:"EUR na PLN · ostatni miesiąc",
+          chartLoading:"Pobieranie kursu…",
+          chartError:"Nie można załadować wykresu kursu",
+          chartPrefix:"EUR na PLN · ",
+          deleted:"Wydatek usunięty",
+          undo:"Cofnij",
+          updateAvailable:"Dostępna nowa wersja",
+          updateNow:"Aktualizuj"
+        }
+      };
+
+      function t(key){
+        const lang = preferences.language === "pl" ? "pl" : "nl";
+        return UI_TEXT[lang][key] || UI_TEXT.nl[key] || key;
+      }
+
+      function loadPreferences(){
+        try{
+          preferences = {...preferences, ...JSON.parse(localStorage.getItem(PREFS_KEY) || "{}")};
+        }catch(error){}
+        if(preferences.language !== "pl") preferences.language = "nl";
+        if(preferences.theme !== "light") preferences.theme = "dark";
+      }
+
+      function savePreferences(){
+        try{
+          localStorage.setItem(PREFS_KEY, JSON.stringify(preferences));
+        }catch(error){}
+      }
+
+      function setText(selector, text){
+        const node = document.querySelector(selector);
+        if(node) node.textContent = text;
+      }
+
+      function applyTheme(){
+        document.body.classList.toggle("light-theme", preferences.theme === "light");
+        const themeColor = preferences.theme === "light" ? "#f2f2f7" : "#000000";
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if(meta) meta.setAttribute("content", themeColor);
+      }
+
+      function applyLanguage(){
+        document.documentElement.lang = preferences.language === "pl" ? "pl" : "nl";
+
+        setText(".total-label", t("netTotal"));
+        const rateLabel = el.rateBadge ? el.rateBadge.querySelector("span") : null;
+        if(rateLabel) rateLabel.textContent = "PLN";
+
+        setText('[data-accordion="expenses"] .accordion-title strong', t("expensesTitle"));
+        setText('[data-accordion="expenses"] .accordion-title span', t("expensesSubtitle"));
+        setText('[data-accordion="analysis"] .accordion-title strong', t("analysisTitle"));
+        setText('[data-accordion="analysis"] .accordion-title span', t("analysisSubtitle"));
+        setText('[data-accordion="currency"] .accordion-title strong', t("currencyTitle"));
+        setText('[data-accordion="currency"] .accordion-title span', t("currencySubtitle"));
+        setText(".currency-current div:first-child span", t("currentRate"));
+        setText(".currency-current div:nth-child(2) span", t("lastUpdated"));
+        setText('[data-accordion="settings"] .accordion-title strong', t("settingsTitle"));
+        setText('[data-accordion="settings"] .accordion-title span', t("settingsSubtitle"));
+        setText('[data-accordion="settings-preferences"] .accordion-title strong', t("preferencesTitle"));
+        setText('[data-accordion="settings-preferences"] .accordion-title span', t("preferencesSubtitle"));
+        setText('[data-accordion="settings-categories"] .accordion-title strong', t("categoriesTitle"));
+        setText('[data-accordion="settings-categories"] .accordion-title span', t("categoriesSubtitle"));
+        setText('[data-accordion="settings-data"] .accordion-title strong', t("dataTitle"));
+        setText('[data-accordion="settings-data"] .accordion-title span', t("dataSubtitle"));
+
+        setText("#languagePreferenceLabel", t("language"));
+        setText("#themePreferenceLabel", t("theme"));
+        setText("#expenseTypeBtn", t("expense"));
+        setText("#incomeTypeBtn", t("income"));
+        setText("#addCategoryBtn", t("add"));
+        setText("#exportBtn", t("exportCsv"));
+        setText(".import-label", t("importCsv"));
+        setText("#plnChartTitle", t("chartTitle"));
+        setText("#plnChartSubtitle", t("chartSubtitle"));
+        setText("#plnChartLoading", t("chartLoading"));
+        setText("#undoToast span", t("deleted"));
+        setText("#undoDeleteBtn", t("undo"));
+        setText("#updateBar span", t("updateAvailable"));
+        setText("#updateNow", t("updateNow"));
+
+        if(el.rateInput) el.rateInput.placeholder = t("ratePlaceholder");
+        if(el.amountInput) el.amountInput.placeholder = t("amountPlaceholder");
+        if(el.noteInput) el.noteInput.placeholder = t("notePlaceholder");
+        if(el.newCategoryInput) el.newCategoryInput.placeholder = t("newCategory");
+
+        const currencyOptions = el.currencyInput ? el.currencyInput.options : [];
+        if(currencyOptions.length >= 2){
+          currencyOptions[0].textContent = t("euro");
+          currencyOptions[1].textContent = t("zloty");
+        }
+
+        const sortOptions = el.sortSelect ? el.sortSelect.options : [];
+        if(sortOptions.length >= 5){
+          sortOptions[0].textContent = t("newest");
+          sortOptions[1].textContent = t("oldest");
+          sortOptions[2].textContent = t("category");
+          sortOptions[3].textContent = t("amountDesc");
+          sortOptions[4].textContent = t("amountAsc");
+        }
+
+        const languageSelect = document.getElementById("languageSelect");
+        if(languageSelect) languageSelect.value = preferences.language;
+        const themeSelect = document.getElementById("themeSelect");
+        if(themeSelect){
+          themeSelect.value = preferences.theme;
+          if(themeSelect.options.length >= 2){
+            themeSelect.options[0].textContent = t("dark");
+            themeSelect.options[1].textContent = t("light");
+          }
+        }
+
+        setText("#statusVersionLabel", t("statusVersion"));
+        setText("#statusRateLabel", t("statusRate"));
+        setText("#statusExpenseLabel", t("statusExpenses"));
+        setText("#statusCategoryLabel", t("statusCategories"));
+        setText("#statusStorageLabel", t("statusStorage"));
+        setText("#statusCacheLabel", t("statusCache"));
+        setText("#statusStorageNote", t("dataInfo"));
+        updateDataStatus();
+
+        const chartPills = document.querySelectorAll(".chart-pill");
+        if(chartPills[0] && chartPills[0].firstChild) chartPills[0].firstChild.textContent = t("biggestNet");
+        if(chartPills[1] && chartPills[1].firstChild) chartPills[1].firstChild.textContent = t("expenseCount");
+      }
+
+      function localStorageSize(){
+        let total = 0;
+        try{
+          for(let i = 0; i < localStorage.length; i++){
+            const key = localStorage.key(i) || "";
+            const value = localStorage.getItem(key) || "";
+            total += key.length + value.length;
+          }
+        }catch(error){}
+        const kb = total / 1024;
+        return kb < 10 ? kb.toFixed(1) + " kB" : Math.round(kb) + " kB";
+      }
+
+
+      function updateCurrencyPanel(){
+        const rate = el.rateBadge ? el.rateBadge.querySelector("b")?.textContent || "—" : "—";
+        const rateNode = document.getElementById("currencyCurrentRate");
+        if(rateNode) rateNode.textContent = "PLN " + rate.replace(/^PLN\s*/,"");
+
+        const timeNode = document.getElementById("currencyCurrentTime");
+        if(timeNode){
+          const status = document.getElementById("appRateTimestamp");
+          timeNode.textContent = status ? status.textContent : "—";
+        }
+      }
+
+      function updateDataStatus(){
+        const set = (id, value) => {
+          const node = document.getElementById(id);
+          if(node) node.textContent = value;
+        };
+
+        set("statusVersion", APP_VERSION);
+        set("statusExpenseCount", String(expenses.length));
+        set("statusCategoryCount", String(categories.length));
+        set("statusStorageSize", localStorageSize());
+        set("statusCacheVersion", CACHE_VERSION);
+        updateRateTimestampInfo();
+        updateCurrencyPanel();
+      }
+
+      function updateRateTimestampInfo(){
+        const elInfo=document.getElementById("appRateTimestamp");
+        if(!elInfo) return;
+
+        let stamp = window.currentRateTimestamp || window.currentRateDateTime || "";
+
+        if(!stamp){
+          try{
+            const log = JSON.parse(localStorage.getItem("vakantie-uitgaven-rate-log-v1") || "[]");
+            const latest = log.find(item => item.source && String(item.source).includes("actueel"));
+            if(latest && latest.time){
+              stamp = new Date(latest.time).toLocaleString(preferences.language === "pl" ? "pl-PL" : "nl-NL", {
+                day:"numeric",
+                month:"numeric",
+                year:"numeric",
+                hour:"2-digit",
+                minute:"2-digit"
+              });
+            }
+          }catch(error){}
+        }
+
+        elInfo.textContent = stamp || "—";
+      }
+
+      function initPreferences(){
+        const languageSelect = document.getElementById("languageSelect");
+        if(languageSelect){
+          languageSelect.value = preferences.language;
+          languageSelect.addEventListener("change", () => {
+            preferences.language = languageSelect.value === "pl" ? "pl" : "nl";
+            savePreferences();
+            render();
+            applyLanguage();
+            updateRateTimestampInfo();
+          });
+        }
+
+        const themeSelect = document.getElementById("themeSelect");
+        if(themeSelect){
+          themeSelect.value = preferences.theme;
+          themeSelect.addEventListener("change", () => {
+            preferences.theme = themeSelect.value === "light" ? "light" : "dark";
+            savePreferences();
+            applyTheme();
+            applyLanguage();
+          });
+        }
+      }
+
+      /* ---------------------------------------------------------
+         11. Events en start
+         --------------------------------------------------------- */
+      function bindEvents(){
+        el.addBtn.onclick = () => showEntry();
+        if(el.undoDeleteBtn) el.undoDeleteBtn.onclick = undoDelete;
+        if(el.resetRateCache) el.resetRateCache.onclick = () => { clearRateCache(); updateCurrentRateBadge();
+        updateRateTimestampInfo(); updateEntryRateForDate(true); };
+        el.confirmBtn.onclick = saveEntry;
+        el.cancelBtn.onclick = hideEntry;
+        el.expenseTypeBtn.onclick = () => setTransactionType("expense");
+        el.incomeTypeBtn.onclick = () => setTransactionType("income");
+        el.filterSelect.onchange = renderList;
+        el.sortSelect.onchange = renderList;
+        el.exportBtn.onclick = exportCSV;
+        el.importCsvInput.onchange = () => importCSVFile(el.importCsvInput.files && el.importCsvInput.files[0]);
+        el.addCategoryBtn.onclick = addCategory;
+        el.editCategoryBtn.onclick = () => {
+          categoryDeleteMode = !categoryDeleteMode;
+          el.editCategoryBtn.classList.toggle("active", categoryDeleteMode);
+          renderCategoryOptions();
+        };
+        document.addEventListener("click", event => {
+          if(!event.target.closest(".expense-cell")){
+            closeSwipeExcept();
+          }
+        });
+        el.currencyInput.onchange = () => {
+          if(el.currencyInput.value === "PLN"){
+            el.rateInput.disabled = false;
+            el.rateInput.value = "";
+            el.rateInput.dataset.auto = "1";
+            updateEntryRateForDate(true);
+          }else{
+            el.rateInput.disabled = true;
+            el.rateInput.value = "";
+            el.rateInput.dataset.auto = "0";
+          }
+        };
+        el.dateInput.onchange = () => updateEntryRateForDate(true);
+        el.rateInput.addEventListener("input", () => {
+          el.rateInput.dataset.auto = "0";
+        });
+        el.amountInput.addEventListener("keydown", event => {
+          if(event.key === "Enter") saveEntry();
+        });
+        el.noteInput.addEventListener("keydown", event => {
+          if(event.key === "Enter") saveEntry();
+        });
+        el.newCategoryInput.addEventListener("keydown", event => {
+          if(event.key === "Enter") addCategory();
+        });
+      }
+      function render(){
+        renderCategoryOptions();
+        renderStats();
+        renderList();
+        renderChart();
+      }
+      function start(){
+        playSplash();
+        load();
+        loadPreferences();
+        applyTheme();
+        bindEvents();
+        hideEntry();
+        render();
+        updateDataStatus();
+        initAccordions();
+        initClosedAccordionLifecycle();
+        initPreferences();
+        initPlnChart();
+        applyLanguage();
+        updateRateTimestampInfo();
+        updateCurrentRateBadge();
+        registerServiceWorker();
+      }
+      if(document.readyState === "loading"){
+        document.addEventListener("DOMContentLoaded", start);
+      }else{
+        start();
+      }
+    })();
+</script>
+</body>
+</html>
